@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "commonjs",
+    "lib": ["esnext"],
+    "sourceMap": true,
+    "outDir": "dist",
+    "removeComments": true,
+    "strict": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@utils/*": ["src/utils/*"],
+      "@config": ["src/config"],
+      "@config/*": ["src/config/*"],
+      "@loaders": ["src/loaders"],
+      "@loaders/*": ["src/loaders/*"],
+      "@logger": ["src/loaders/logger"],
+      "@components/*": ["src/components/*"],
+      "@interfaces/*": ["src/interfaces/*"],
+      "@auth/*": ["src/components/auth/*"],
+      "@mailer/*": ["src/components/mailer/*"]
+    },
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,    
+    "experimentalDecorators": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}
