@@ -63,7 +63,7 @@ export default class AuthService {
     return { user, accessToken, refreshToken }
   }
 
-  public logout({ userId, refreshToken }: { userId: number; refreshToken: string }) {
+  public logout({ userId, refreshToken }: { userId: string; refreshToken: string }) {
     const hashedToken = this.hashToken(refreshToken)
     return this.prisma.refreshToken.deleteMany({
       where: { token: hashedToken, userId },

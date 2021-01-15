@@ -28,7 +28,7 @@ export default class AuthController {
   }
 
   async logout(ctx: Context) {
-    const { id, refreshToken }: { id: number; refreshToken: string } = ctx.state.auth
+    const { id, refreshToken }: { id: string; refreshToken: string } = ctx.state.auth
     this.logger.info('Signing out with user id %s', id)
 
     await this.authService.logout({ userId: id, refreshToken })

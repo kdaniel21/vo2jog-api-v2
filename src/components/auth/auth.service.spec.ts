@@ -15,7 +15,7 @@ describe('Auth Service', () => {
 
   const fakeUserEntry = {
     ...fakeUser,
-    userId: faker.random.number(),
+    userId: faker.random.uuid(),
     password: bcrypt.hashSync(fakeUserCredentials.password, config.auth.saltRounds),
   }
 
@@ -112,7 +112,7 @@ describe('Auth Service', () => {
     it('should remove refresh token from database', async () => {
       const removeToken = prismaClient.refreshToken.deleteMany
       await authService.logout({
-        userId: faker.random.number(),
+        userId: faker.random.uuid(),
         refreshToken: faker.random.alphaNumeric(),
       })
 
