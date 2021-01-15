@@ -7,27 +7,223 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// USER MODEL
 enum Role {
   USER
   ADMIN
 }
 
 model User {
-  id                          Int            @id @default(autoincrement())
+  id                          String         @id @default(cuid())
+  isAdmin                     Boolean        @default(false) @map("is_admin")
   email                       String         @unique
+  isEmailConfirmed            Boolean        @default(false) @map("is_email_confirmed")
   name                        String?
   password                    String
   role                        Role           @default(USER)
   refreshTokens               RefreshToken[]
   passwordResetToken          String?        @map("password_reset_token")
   passwordResetTokenExpiresAt DateTime?      @map("password_reset_token_expires_at")
+  profile                     Organizer?
   deleted                     Boolean        @default(false)
+  createdAt                   DateTime       @default(now()) @map("created_at")
+  updatedAt                   DateTime       @updatedAt @map("updated_at")
+
+  @@map("users")
 }
 
 model RefreshToken {
   id        Int      @id @default(autoincrement())
   token     String   @unique
   user      User     @relation(fields: [userId], references: [id])
-  userId    Int      @map("user_id")
+  userId    String   @map("user_id")
   expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("refresh_tokens")
+}
+
+// ORGANIZER MODEL
+model Organizer {
+  id            String                   @id @default(cuid())
+  user          User                     @relation(fields: [userId], references: [id])
+  userId        String                   @map("user_id")
+  isApproved    Boolean                  @default(false) @map("is_approved")
+  events        Event[]
+  contactPeople OrganizerContactPerson[]
+  socialMedia   SocialMedia[]
+  createdAt     DateTime                 @default(now()) @map("created_at")
+  updatedAt     DateTime                 @updatedAt @map("updated_at")
+
+  @@map("organizers")
+}
+
+model OrganizerContactPerson {
+  id          Int       @id @default(autoincrement())
+  organizerId String    @map("organizer_id")
+  organizer   Organizer @relation(fields: [organizerId], references: [id])
+  name        String
+  email       String?
+  phoneNumber String?   @map("phone_number")
+  public      Boolean   @default(true)
+
+  @@map("organizer_contact_people")
+}
+
+model SocialMedia {
+  id          Int        @id @default(autoincrement())
+  organizerId String?    @map("organizer_id")
+  organizer   Organizer? @relation(fields: [organizerId], references: [id])
+  Event       Event?     @relation(fields: [eventId], references: [id])
+  eventId     String?    @map("event_id")
+  name        String
+  link        String
+  icon        String     @default("globe")
+
+  @@map("social_media")
+}
+
+// EVENT MODEL
+model Event {
+  id            String              @id @default(cuid())
+  organizer     Organizer?          @relation(fields: [organizerId], references: [id])
+  organizerId   String?
+  name          String
+  isPublic      Boolean             @default(false) @map("is_public")
+  isApproved    Boolean             @default(false) @map("is_approved")
+  startDate     DateTime?           @map("start_date")
+  endDate       DateTime?           @map("end_date")
+  imageCover    String?             @map("image_cover")
+  description   String?
+  location      EventLocation?
+  documents     EventDocument[]
+  questions     EventQuestion[]
+  socialMedia   SocialMedia[]
+  competitions  EventCompetition[]
+  scheduleItems EventScheduleItem[]
+  isDeleted     Boolean             @map("is_deleted")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  @@map("events")
+}
+
+model EventLocation {
+  id          Int     @id @default(autoincrement())
+  event       Event   @relation(fields: [eventId], references: [id])
+  eventId     String  @map("event_id")
+  latitude    Int
+  longitude   Int
+  label       String?
+  countryCode String? @map("country_code")
+  countryName String? @map("country_name")
+  state       String?
+  county      String?
+  city        String?
+  postalCode  String? @map("postal_code")
+  street      String?
+  houseNumber String? @map("house_number")
+
+  @@map("event_locations")
+}
+
+model EventDocument {
+  id      Int    @id @default(autoincrement())
+  eventId String @map("event_id")
+  event   Event  @relation(fields: [eventId], references: [id])
+  name    String
+  file    String
+
+  @@map("event_documents")
+}
+
+model EventQuestion {
+  id       Int     @id @default(autoincrement())
+  eventId  String  @map("event_id")
+  event    Event   @relation(fields: [eventId], references: [id])
+  question String
+  answer   String?
+
+  @@map("event_questions")
+}
+
+model EventCompetition {
+  id                String                      @id @default(cuid())
+  eventId           String                      @map("event_id")
+  event             Event                       @relation(fields: [eventId], references: [id])
+  name              String
+  elevationGain     Int?                        @map("elevation_gain")
+  elevationGainUnit DistanceUnit?               @map("elevation_gain_unit")
+  elevationLoss     Int?                        @map("elevation_loss")
+  elevationLossUnit DistanceUnit?               @map("elevation_loss_unit")
+  ageLimitMinimum   Int?                        @map("age_limit_minimum")
+  ageLimitMaximum   Int?                        @map("age_limit_maximum")
+  distance          Int?
+  distanceUnit      DistanceUnit?               @map("distance_unit")
+  priceSteps        EventCompetitionPriceStep[]
+
+
+  @@map("event_competitions")
+}
+
+enum DistanceUnit {
+  KILOMETER
+  MILE
+  METER
+  FOOT
+}
+
+enum Currency {
+  EUR
+  HUF
+  USD
+}
+
+model EventCompetitionPriceStep {
+  id            Int              @id @default(autoincrement())
+  competition   EventCompetition @relation(fields: [competitionId], references: [id])
+  competitionId String
+  price         Int
+  currency      Currency
+  endTime       DateTime         @map("end_time")
+
+  @@map("event_competition_price_steps")
+}
+
+model EventScheduleItem {
+  id      Int      @id @default(autoincrement())
+  event   Event    @relation(fields: [eventId], references: [id])
+  eventId String
+  name    String
+  time    DateTime
+
+  @@map("event_schedule_items")
+}
+
+// CATEGORY MODEL
+model Category {
+  id            String        @id @default(cuid())
+  name          String
+  subcategories Subcategory[]
+
+  @@map("categories")
+}
+
+model Subcategory {
+  id            String         @id @default(cuid())
+  name          String
+  category      Category       @relation(fields: [categoryId], references: [id])
+  categoryId    String
+  categoryItems CategoryItem[]
+
+  @@map("subcategories")
+}
+
+model CategoryItem {
+  id            Int         @id @default(autoincrement())
+  subcategory   Subcategory @relation(fields: [subcategoryId], references: [id])
+  subcategoryId String
+  name          String
+
+  @@map("category_items")
 }
