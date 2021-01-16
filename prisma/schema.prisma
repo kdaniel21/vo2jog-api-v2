@@ -13,7 +13,7 @@ enum Role {
   ADMIN
 }
 
-model User {
+model Account {
   id                          String         @id @default(cuid())
   isAdmin                     Boolean        @default(false) @map("is_admin")
   email                       String         @unique
@@ -29,14 +29,14 @@ model User {
   createdAt                   DateTime       @default(now()) @map("created_at")
   updatedAt                   DateTime       @updatedAt @map("updated_at")
 
-  @@map("users")
+  @@map("accounts")
 }
 
 model RefreshToken {
   id        Int      @id @default(autoincrement())
   token     String   @unique
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String   @map("user_id")
+  account      Account     @relation(fields: [accountId], references: [id])
+  accountId    String   @map("account_id")
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -46,8 +46,8 @@ model RefreshToken {
 // ORGANIZER MODEL
 model Organizer {
   id            String                   @id @default(cuid())
-  user          User                     @relation(fields: [userId], references: [id])
-  userId        String                   @map("user_id")
+  account          Account                     @relation(fields: [accountId], references: [id])
+  accountId        String                   @map("account_id")
   isApproved    Boolean                  @default(false) @map("is_approved")
   events        Event[]
   contactPeople OrganizerContactPerson[]
