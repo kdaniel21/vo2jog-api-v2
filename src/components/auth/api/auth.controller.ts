@@ -3,6 +3,7 @@ import { inject, injectable } from 'tsyringe'
 import { Logger } from 'pino'
 import AuthService from '@auth/auth.service'
 import { AppError } from '@utils/app-error'
+import { User } from '@prisma/client'
 
 @injectable()
 export default class AuthController {
@@ -23,6 +24,8 @@ export default class AuthController {
     const { refreshToken } = ctx.state.auth
     ctx.assert(refreshToken, 400, 'No refresh token was provided.')
 
+    this.logger.info('Generating new access token...')
+
     const newTokens: {
       accessToken: string
       refreshToken: string
@@ -32,14 +35,16 @@ export default class AuthController {
   }
 
   async retrieveUser(ctx: Context) {
-    const { user } = ctx.state.auth
+    const { user }: { user: User } = ctx.state.auth
+
+    this.logger.info('Retrieving user %s', user.email)
 
     ctx.body = { user }
   }
 
   async register(ctx: Context) {
-    this.logger.info('Signing up with')
     const { email, name, password } = ctx.request.body
+    this.logger.info('Signing up with email %s', email)
     const userCredentials = await this.authService.register({ email, password, name })
 
     ctx.body = { ...userCredentials }
