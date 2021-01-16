@@ -6,7 +6,7 @@ export default async (ctx: Context, next: Next) => {
   try {
     const prismaClient: PrismaClient = container.resolve('prisma')
 
-    const { id }: { id: number } = ctx.state.auth.user
+    const { id }: { id: string } = ctx.state.auth.user
     const userRecord = await prismaClient.user.findUnique({ where: { id } })
     if (!userRecord) throw new Error()
 

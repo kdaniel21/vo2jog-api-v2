@@ -11,7 +11,7 @@ describe('Fetch user middleware', () => {
   mocked(container).resolve.mockReturnValue(prismaClient)
 
   const fakeUser: Partial<User> = {
-    id: faker.random.number(),
+    id: faker.random.uuid(),
     name: faker.name.findName(),
     email: faker.internet.email(),
   }
