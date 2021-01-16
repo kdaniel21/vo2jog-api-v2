@@ -2,6 +2,7 @@ import faker from 'faker'
 import bcrypt from 'bcrypt'
 import AuthService from '@auth/auth.service'
 import config from '@config'
+import { AppError } from '@utils/app-error'
 
 describe('Auth Service', () => {
   const fakeUserCredentials = {
@@ -31,6 +32,8 @@ describe('Auth Service', () => {
     refreshToken: {
       create: jest.fn(),
       deleteMany: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
     },
   }
   const logger = {
@@ -65,7 +68,6 @@ describe('Auth Service', () => {
       )
 
       expect(user).toMatchObject(fakeUserEntry)
-      // expect(user).not.toHaveProperty('password')
       expect(accessToken).toBeTruthy()
       expect(refreshToken).toBeTruthy()
     })
@@ -105,6 +107,39 @@ describe('Auth Service', () => {
       prismaClient.user.count.mockResolvedValueOnce(1)
 
       expect(async () => await authService.register(fakeUser)).rejects.toThrow()
+    })
+  })
+
+  describe('Refresh access tokens feature', () => {
+    it('should generate new JWT and refresh tokens', async () => {
+      const validRefreshToken = faker.random.uuid()
+      const refreshTokenRecord = {
+        id: faker.random.number(),
+        token: faker.random.uuid(),
+        expiresAt: faker.date.future(),
+        user: { id: faker.random.uuid(), ...fakeUser },
+      }
+      prismaClient.refreshToken.findFirst.mockResolvedValueOnce(refreshTokenRecord)
+      const updateRefreshToken = prismaClient.refreshToken.update
+
+      const { refreshToken, accessToken } = await authService.refreshTokens(
+        validRefreshToken,
+      )
+
+      expect(accessToken).toBeTruthy()
+      expect(refreshToken).toBeTruthy()
+      expect(updateRefreshToken).toBeCalled()
+    })
+
+    it('should throw an error when using invalid refresh token', () => {
+      const invalidRefreshToken = 'invalid'
+      prismaClient.refreshToken.findFirst.mockResolvedValueOnce(null)
+      const updateRefreshToken = prismaClient.refreshToken.update
+
+      expect(
+        async () => await authService.refreshTokens(invalidRefreshToken),
+      ).rejects.toThrowError(AppError)
+      expect(updateRefreshToken).not.toBeCalled()
     })
   })
 

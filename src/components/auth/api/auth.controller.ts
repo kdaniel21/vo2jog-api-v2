@@ -2,6 +2,7 @@ import { Context } from 'koa'
 import { inject, injectable } from 'tsyringe'
 import { Logger } from 'pino'
 import AuthService from '@auth/auth.service'
+import { AppError } from '@utils/app-error'
 
 @injectable()
 export default class AuthController {
@@ -16,6 +17,18 @@ export default class AuthController {
     const userCredentials = await this.authService.login({ email, password })
 
     ctx.body = { ...userCredentials }
+  }
+
+  async refreshAccessToken(ctx: Context) {
+    const { refreshToken } = ctx.state.auth
+    ctx.assert(refreshToken, 400, 'No refresh token was provided.')
+
+    const newTokens: {
+      accessToken: string
+      refreshToken: string
+    } = await this.authService.refreshTokens(refreshToken)
+
+    ctx.body = { ...newTokens }
   }
 
   async register(ctx: Context) {

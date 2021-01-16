@@ -4,6 +4,7 @@ import faker from 'faker'
 import { container } from 'tsyringe'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
+import crypto from 'crypto'
 import loader from '@loaders'
 
 describe('/auth endpoint', () => {
@@ -98,6 +99,46 @@ describe('/auth endpoint', () => {
     })
   })
 
+  describe('POST /refresh', () => {
+    const refreshEndpoint = `${BASE_ENDPOINT}/refresh`
+
+    it('should send new access and refresh tokens', async () => {
+      const validRefreshToken = faker.random.uuid()
+      const refreshTokenRecord = {
+        token: crypto
+          .createHash('sha256')
+          .update(validRefreshToken)
+          .digest('hex')
+          .toString(),
+        expiresAt: faker.date.future(),
+        user: { connect: { email: fakeUser.email } },
+      }
+      const { id } = await prismaClient.refreshToken.create({ data: refreshTokenRecord })
+
+      const res = await request
+        .post(refreshEndpoint)
+        .send({ refreshToken: validRefreshToken })
+
+      expect(res.status).toBe(200)
+      expect(res.body).toContainKeys(['accessToken', 'refreshToken'])
+      expect(res.body.refreshToken).not.toBe(validRefreshToken)
+
+      // Cleanup
+      await prismaClient.refreshToken.delete({ where: { id } })
+    })
+
+    it('should send an error when using invalid refresh token', async () => {
+      const invalidRefreshToken = faker.random.uuid()
+
+      const res = await request
+        .post(refreshEndpoint)
+        .send({ refreshToken: invalidRefreshToken })
+
+      expect(res.status).toBe(401)
+      expect(res.body).not.toContainKeys(['accessToken', 'refreshToken'])
+    })
+  })
+
   // TODO Implement it with middleware authentication
   describe.skip('POST /logout', () => {
     const logoutEndpoint = `${BASE_ENDPOINT}/logout`
@@ -114,6 +155,8 @@ describe('/auth endpoint', () => {
       const res = await request.post(logoutEndpoint).send()
 
       expect(res.status).toBe(204)
+
+      await prismaClient.refreshToken.delete({ where: { token: fakeRefreshToken.token } })
     })
   })
 

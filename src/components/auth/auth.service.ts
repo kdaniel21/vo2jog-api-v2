@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { addSeconds } from 'date-fns'
-import { PrismaClient, User } from '@prisma/client'
+import { PrismaClient, RefreshToken, Role, User } from '@prisma/client'
 import EventEmitter from 'eventemitter3'
 import { inject, injectable } from 'tsyringe'
 import { Logger } from 'pino'
@@ -38,7 +38,7 @@ export default class AuthService {
     if (!isPasswordCorrect) throw new AppError('Invalid email or password', 401)
 
     const accessToken = this.generateJWT(user)
-    const refreshToken = await this.generateRefreshToken(user)
+    const refreshToken = await this.generateNewRefreshToken(user)
 
     this.authSubscriber.emit(authEvents.login, { user })
 
@@ -59,11 +59,26 @@ export default class AuthService {
     })
 
     const accessToken = this.generateJWT(user)
-    const refreshToken = await this.generateRefreshToken(user)
+    const refreshToken = await this.generateNewRefreshToken(user)
 
     this.authSubscriber.emit(authEvents.register)
 
     return { user, accessToken, refreshToken }
+  }
+
+  public async refreshTokens(
+    refreshToken: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const refreshTokenRecord = await this.getValidRefreshToken(refreshToken)
+    if (!refreshTokenRecord) throw new AppError('Invalid refresh token.', 401)
+
+    // Replace refresh token
+    const { id, user } = refreshTokenRecord
+    const newRefreshToken = await this.replaceExistingRefreshToken(id)
+    const { email, role } = user
+    const newAccessToken = this.generateJWT({ id: user.id, email, role })
+
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken }
   }
 
   public logout({ userId, refreshToken }: { userId: string; refreshToken: string }) {
@@ -116,7 +131,31 @@ export default class AuthService {
     }
   }
 
-  private async generateRefreshToken({ id, email }: User): Promise<string> {
+  /**
+   *
+   * @param refreshToken: valid refresh token
+   * @returns refreshToken w/ the necessary user fields to create a new JWT
+   */
+  private getValidRefreshToken(refreshToken: string) {
+    const hashedRefreshToken = this.hashToken(refreshToken)
+    return this.prisma.refreshToken.findFirst({
+      where: { token: hashedRefreshToken, expiresAt: { gte: new Date() } },
+      include: { user: { select: { id: true, email: true, role: true } } },
+    })
+  }
+
+  private async replaceExistingRefreshToken(refreshTokenId: number): Promise<string> {
+    const { token, hashedToken } = this.generateHashedTokenPair()
+
+    await this.prisma.refreshToken.update({
+      where: { id: refreshTokenId },
+      data: { token: hashedToken },
+    })
+
+    return token
+  }
+
+  private async generateNewRefreshToken({ id, email }: User): Promise<string> {
     this.logger.info('Generating refresh token for user %s', email)
 
     const { token, hashedToken } = this.generateHashedTokenPair()
@@ -135,7 +174,15 @@ export default class AuthService {
     return token
   }
 
-  private generateJWT({ id, email, role }: User): string {
+  private generateJWT({
+    id,
+    email,
+    role,
+  }: {
+    id: string
+    email: string
+    role: Role
+  }): string {
     this.logger.info('Generating JWT token for user %s', email)
     return jwt.sign({ user: { id, role } }, config.auth.jwtSecret, {
       expiresIn: config.auth.jwtLifetime,

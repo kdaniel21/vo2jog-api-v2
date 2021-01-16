@@ -3,6 +3,7 @@ import validate from 'koa-joi-validate'
 import Joi from 'joi'
 import { container } from 'tsyringe'
 import validateJwt from '@auth/api/middleware/validate-jwt'
+import includeTokens from '@auth/api/middleware/include-tokens'
 import AuthController from '@auth/api/auth.controller'
 
 const router = new Router()
@@ -30,8 +31,11 @@ export default (api: Router) => {
   })
   router.post('/register', registerValidator, ctx => authController.register(ctx))
 
+  // POST /refresh
+  router.post('/refresh', includeTokens, ctx => authController.refreshAccessToken(ctx))
+
   // POST /logout
-  router.post('/logout', validateJwt, authController.logout)
+  router.post('/logout', validateJwt, ctx => authController.logout(ctx))
 
   // POST /forgot-password
   const forgotPasswordValidator = validate({
