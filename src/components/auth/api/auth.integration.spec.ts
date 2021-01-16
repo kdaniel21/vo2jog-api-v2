@@ -5,7 +5,9 @@ import { container } from 'tsyringe'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
+import jwt from 'jsonwebtoken'
 import loader from '@loaders'
+import config from '@config'
 
 describe('/auth endpoint', () => {
   const BASE_ENDPOINT = '/api/v2/auth'
@@ -21,14 +23,16 @@ describe('/auth endpoint', () => {
     email: faker.internet.email(),
     password: faker.internet.password(),
   }
+  let userId: string
 
   beforeAll(async () => {
     // Fake existing user
-    await prismaClient.user.create({ data: { ...fakeUser } })
+    const user = await prismaClient.user.create({ data: { ...fakeUser } })
+    userId = user.id
   })
 
   afterAll(async () => {
-    await prismaClient.user.delete({ where: { email: fakeUser.email } })
+    await prismaClient.user.delete({ where: { id: userId } })
   })
 
   describe('POST /login', () => {
@@ -136,6 +140,33 @@ describe('/auth endpoint', () => {
 
       expect(res.status).toBe(401)
       expect(res.body).not.toContainKeys(['accessToken', 'refreshToken'])
+    })
+  })
+
+  describe('GET /user', () => {
+    const userEndpoint = `${BASE_ENDPOINT}/user`
+
+    it('should return the validated user', async () => {
+      const accessToken = jwt.sign({ user: { id: userId } }, config.auth.jwtSecret)
+
+      const res = await request
+        .get(userEndpoint)
+        .set('Authorization', `Bearer ${accessToken}`)
+
+      expect(res.status).toBe(200)
+      expect(res.body.user.id).toEqual(userId)
+      expect(res.body.user.email).toEqual(fakeUser.email)
+    })
+
+    it('should throw an error when using invalid access token', async () => {
+      const invalidAccessToken = faker.random.uuid()
+
+      const res = await request
+        .get(userEndpoint)
+        .set('Authorization', `Bearer ${invalidAccessToken}`)
+
+      expect(res.status).toBe(401)
+      expect(res.body).not.toHaveProperty('user')
     })
   })
 

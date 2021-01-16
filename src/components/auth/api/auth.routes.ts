@@ -5,6 +5,7 @@ import { container } from 'tsyringe'
 import validateJwt from '@auth/api/middleware/validate-jwt'
 import includeTokens from '@auth/api/middleware/include-tokens'
 import AuthController from '@auth/api/auth.controller'
+import fetchUser from '@auth/api/middleware/fetch-user'
 
 const router = new Router()
 
@@ -33,6 +34,9 @@ export default (api: Router) => {
 
   // POST /refresh
   router.post('/refresh', includeTokens, ctx => authController.refreshAccessToken(ctx))
+
+  // GET /user
+  router.get('/user', fetchUser, ctx => authController.retrieveUser(ctx))
 
   // POST /logout
   router.post('/logout', validateJwt, ctx => authController.logout(ctx))

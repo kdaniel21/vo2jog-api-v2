@@ -31,6 +31,12 @@ export default class AuthController {
     ctx.body = { ...newTokens }
   }
 
+  async retrieveUser(ctx: Context) {
+    const { user } = ctx.state.auth
+
+    ctx.body = { user }
+  }
+
   async register(ctx: Context) {
     this.logger.info('Signing up with')
     const { email, name, password } = ctx.request.body

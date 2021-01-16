@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import { Next, Context } from 'koa'
 import compose from 'koa-compose'
 import { container } from 'tsyringe'
-import { validateJwt } from './validate-jwt'
+import validateJwt from '@auth/api/middleware/validate-jwt'
 
 export const fetchUser = async (ctx: Context, next: Next) => {
   try {
