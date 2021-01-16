@@ -8,7 +8,7 @@ CREATE TYPE "DistanceUnit" AS ENUM ('KILOMETER', 'MILE', 'METER', 'FOOT');
 CREATE TYPE "Currency" AS ENUM ('EUR', 'HUF', 'USD');
 
 -- CreateTable
-CREATE TABLE "accounts" (
+CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "is_admin" BOOLEAN NOT NULL DEFAULT false,
     "email" TEXT NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE "accounts" (
 CREATE TABLE "refresh_tokens" (
 "id" SERIAL,
     "token" TEXT NOT NULL,
-    "account_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
     "expires_at" TIMESTAMP(3) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -39,7 +39,7 @@ CREATE TABLE "refresh_tokens" (
 -- CreateTable
 CREATE TABLE "organizers" (
     "id" TEXT NOT NULL,
-    "account_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
     "is_approved" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -193,22 +193,22 @@ CREATE TABLE "category_items" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "accounts.email_unique" ON "accounts"("email");
+CREATE UNIQUE INDEX "users.email_unique" ON "users"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "refresh_tokens.token_unique" ON "refresh_tokens"("token");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "organizers_account_id_unique" ON "organizers"("account_id");
+CREATE UNIQUE INDEX "organizers_user_id_unique" ON "organizers"("user_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "event_locations_event_id_unique" ON "event_locations"("event_id");
 
 -- AddForeignKey
-ALTER TABLE "refresh_tokens" ADD FOREIGN KEY("account_id")REFERENCES "accounts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "refresh_tokens" ADD FOREIGN KEY("user_id")REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "organizers" ADD FOREIGN KEY("account_id")REFERENCES "accounts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "organizers" ADD FOREIGN KEY("user_id")REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "organizer_contact_people" ADD FOREIGN KEY("organizer_id")REFERENCES "organizers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
