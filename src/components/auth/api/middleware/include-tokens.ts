@@ -20,7 +20,7 @@ const extractTokensFromRequest = ({
   return { accessToken, refreshToken }
 }
 
-export default (ctx: Context, next: Next) => {
+export default async (ctx: Context, next: Next) => {
   const { request, cookies } = ctx
   const { accessToken, refreshToken } = extractTokensFromRequest({ request, cookies })
 
@@ -29,5 +29,5 @@ export default (ctx: Context, next: Next) => {
     refreshToken,
   }
 
-  next()
+  await next()
 }

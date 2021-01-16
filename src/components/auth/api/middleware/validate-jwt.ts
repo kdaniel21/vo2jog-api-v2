@@ -1,41 +1,24 @@
-import { Context, Next, Request } from 'koa'
-import Cookies from 'cookies'
+import { Context, Next } from 'koa'
 import jwt from 'jsonwebtoken'
 import config from '@config'
+import compose from 'koa-compose'
+import includeTokens from '@auth/api/middleware/include-tokens'
 
-const extractTokensFromRequest = ({
-  request,
-  cookies,
-}: {
-  request: Request
-  cookies: Cookies
-}): { accessToken: string | undefined; refreshToken: string | undefined } => {
-  const refreshToken = request.body.refreshToken || cookies.get('refreshToken')
-
-  let accessToken = null
-  // Extract access token from header if not found in body
-  const splittedAccessToken = request.headers.authorization.split(' ')
-  if (splittedAccessToken[0] !== 'Bearer' || splittedAccessToken[0] !== 'Token')
-    accessToken = splittedAccessToken[1]
-
-  return { accessToken, refreshToken }
-}
-
-export default (ctx: Context, next: Next) => {
+export const validateJwt = async (ctx: Context, next: Next) => {
   try {
-    const { request, cookies } = ctx
-    const { accessToken, refreshToken } = extractTokensFromRequest({ request, cookies })
-
+    const { accessToken } = ctx.state.auth
     if (!accessToken) throw new Error()
+
     const decoded = jwt.verify(accessToken, config.auth.jwtSecret)
 
     ctx.state.auth = {
-      refreshToken,
-      accessToken,
+      ...ctx.state.auth,
       user: (decoded as any).user,
     }
-    next()
+    await next()
   } catch {
     ctx.throw(401, 'Invalid or expired access token.')
   }
 }
+
+export default compose([includeTokens, validateJwt])

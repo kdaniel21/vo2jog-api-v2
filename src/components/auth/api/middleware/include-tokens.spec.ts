@@ -4,7 +4,10 @@ import includeTokens from '@auth/api/middleware/include-tokens'
 describe('Include tokens middleware', () => {
   const nextFunction = jest.fn()
   const contextMock: any = {
-    request: {},
+    request: {
+      body: {},
+      headers: {},
+    },
     cookies: {
       get: jest.fn(),
     },
@@ -15,7 +18,7 @@ describe('Include tokens middleware', () => {
     const refreshToken = faker.random.uuid()
     const accessToken = faker.random.uuid()
     contextMock.cookies.get.mockReturnValueOnce(refreshToken)
-    contextMock.request.headers.authorization = `Bearer ${accessToken}`
+    contextMock.request.headers = { authorization: `Bearer ${accessToken}` }
 
     includeTokens(contextMock, nextFunction)
 

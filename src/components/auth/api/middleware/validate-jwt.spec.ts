@@ -1,6 +1,6 @@
 import { mocked } from 'ts-jest/utils'
 import faker from 'faker'
-import validateJwt from '@auth/api/middleware/validate-jwt'
+import { validateJwt } from '@auth/api/middleware/validate-jwt'
 import jwt from 'jsonwebtoken'
 jest.mock('jsonwebtoken')
 
@@ -27,8 +27,7 @@ describe('Validate JWT middleware', () => {
     const accessToken = faker.random.uuid()
 
     mocked(jwt).verify.mockImplementationOnce(() => ({ user }))
-    mockContext.cookies.get.mockReturnValueOnce(refreshToken)
-    mockContext.request = { headers: { authorization: `Bearer ${accessToken}` } }
+    mockContext.state.auth = { refreshToken, accessToken }
 
     validateJwt(mockContext as any, nextFunction)
 
@@ -43,7 +42,7 @@ describe('Validate JWT middleware', () => {
     mocked(jwt).verify.mockImplementationOnce(() => {
       throw new Error()
     })
-    mockContext.request = { headers: { authorization: `Bearer ${accessToken}` } }
+    mockContext.state.auth = { accessToken }
 
     validateJwt(mockContext as any, nextFunction)
 
