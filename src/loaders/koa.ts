@@ -15,8 +15,8 @@ export default (app: Koa<Koa.DefaultState, Koa.DefaultContext>) => {
     .use(bodyParser())
     .use(cors())
     .use(loggerMiddleware)
-    .use(errorHandler)
     .use(hiddenFields)
+    .use(errorHandler)
     // Load routes
     .use(router().routes())
     .use(router().allowedMethods())

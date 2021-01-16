@@ -1,7 +1,7 @@
 import { Context, Next } from 'koa'
 
 const hiddenFields: { [key: string]: string[] } = {
-  user: ['password', 'passwordResetToken', 'passwordResetTokenExpiresAt'],
+  user: ['password', 'passwordResetToken', 'passwordResetTokenExpiresAt', 'isDeleted'],
 }
 
 const isObject = (val: any) => typeof val === 'object' && val !== null
@@ -23,10 +23,12 @@ const removeFields = (object: any, topLevelKey: string) => {
  * The recursive function runs for every (deeply) nested object
  */
 export default async (ctx: Context, next: Next) => {
+  console.log('middleware ran')
   try {
     await next()
   } finally {
     const { body } = ctx
+    if (!isObject(body)) return
     Object.keys(body).forEach(topLevelKey => {
       if (!isObject(body[topLevelKey])) return
 
