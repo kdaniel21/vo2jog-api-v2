@@ -14,6 +14,7 @@
       "@config": ["src/config"],
       "@config/*": ["src/config/*"],
       "@database/*": ["src/database/*"],
+      "@api/*": ["src/api/*"],
       "@loaders": ["src/loaders"],
       "@loaders/*": ["src/loaders/*"],
       "@logger": ["src/loaders/logger"],
