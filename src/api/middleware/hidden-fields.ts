@@ -8,6 +8,8 @@ const isObject = (val: any) => typeof val === 'object' && val !== null
 
 const removeFields = (object: any, topLevelKey: string) => {
   const motherObject = object[topLevelKey]
+  if (!isObject(motherObject)) return
+
   Object.keys(object[topLevelKey]).forEach(subKey => {
     const childValue = motherObject[subKey]
     if (isObject(childValue)) return removeFields(motherObject, subKey)
@@ -28,10 +30,7 @@ export default async (ctx: Context, next: Next) => {
   } finally {
     const { body } = ctx
     if (!isObject(body)) return
-    Object.keys(body).forEach(topLevelKey => {
-      if (!isObject(body[topLevelKey])) return
 
-      removeFields(body, topLevelKey)
-    })
+    Object.keys(body).forEach(topLevelKey => removeFields(body, topLevelKey))
   }
 }
