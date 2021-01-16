@@ -14,7 +14,7 @@ export default async (ctx: Context, next: Next) => {
     if (!userRecord) throw new Error()
 
     ctx.state.auth.user = { ...userRecord }
-    next()
+    await next()
   } catch {
     ctx.throw(404, 'User with the specified ID not found.')
   }
