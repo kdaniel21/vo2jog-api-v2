@@ -18,7 +18,7 @@ CREATE TABLE "users" (
     "role" "Role" NOT NULL DEFAULT E'USER',
     "password_reset_token" TEXT,
     "password_reset_token_expires_at" TIMESTAMP(3),
-    "deleted" BOOLEAN NOT NULL DEFAULT false,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -41,8 +41,6 @@ CREATE TABLE "organizers" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
     "is_approved" BOOLEAN NOT NULL DEFAULT false,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
 
     PRIMARY KEY ("id")
 );
@@ -54,7 +52,7 @@ CREATE TABLE "organizer_contact_people" (
     "name" TEXT NOT NULL,
     "email" TEXT,
     "phone_number" TEXT,
-    "public" BOOLEAN NOT NULL DEFAULT true,
+    "isPublic" BOOLEAN NOT NULL DEFAULT true,
 
     PRIMARY KEY ("id")
 );
