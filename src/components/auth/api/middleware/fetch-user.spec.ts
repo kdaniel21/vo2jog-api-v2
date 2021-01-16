@@ -1,4 +1,4 @@
-import fetchUser from '@auth/api/middleware/fetch-user'
+import { fetchUser } from '@auth/api/middleware/fetch-user'
 import { PrismaClient, User } from '@prisma/client'
 import faker from 'faker'
 import { mocked } from 'ts-jest/utils'
