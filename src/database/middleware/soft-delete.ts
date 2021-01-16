@@ -11,7 +11,7 @@ export default (prisma: PrismaClient) => {
     if (conditionsArray.includes(false)) return next(params)
 
     params.action = params.action === 'delete' ? 'update' : 'updateMany'
-    params.args.data = { ...params.args.data, deleted: true }
+    params.args.data = { ...params.args.data, isDeleted: true }
 
     return next(params)
   })
@@ -23,7 +23,7 @@ export default (prisma: PrismaClient) => {
     const conditionsArray = [
       actions.includes(params.action),
       params.model && models.includes(params.model),
-      !params.args.where?.deleted,
+      !params.args.where?.isDeleted,
     ]
     if (conditionsArray.includes(false)) return next(params)
 
@@ -33,7 +33,7 @@ export default (prisma: PrismaClient) => {
 
     params.args.where = {
       ...params.args.where,
-      deleted: false,
+      isDeleted: false,
     }
 
     return next(params)
