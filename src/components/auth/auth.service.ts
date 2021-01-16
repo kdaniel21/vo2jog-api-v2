@@ -27,7 +27,10 @@ export default class AuthService {
     const { email, password } = userCredentialsDTO
 
     this.logger.info('Attempting login with user %s', email)
-    const user = await this.prisma.user.findUnique({ where: { email } })
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      include: { profile: true },
+    })
     if (!user) throw new AppError('Invalid email or password.', 401)
 
     this.logger.info('Checking password for user %s', email)
