@@ -10,7 +10,7 @@ const extractTokensFromRequest = ({
   request: Request
   cookies: Cookies
 }): { accessToken: string | undefined; refreshToken: string | undefined } => {
-  const refreshToken = cookies.get('refreshToken')
+  const refreshToken = request.body.refreshToken || cookies.get('refreshToken')
 
   let accessToken = null
   // Extract access token from header if not found in body
