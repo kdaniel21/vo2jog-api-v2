@@ -13,6 +13,7 @@
       "@utils/*": ["src/utils/*"],
       "@config": ["src/config"],
       "@config/*": ["src/config/*"],
+      "@database/*": ["src/database/*"],
       "@loaders": ["src/loaders"],
       "@loaders/*": ["src/loaders/*"],
       "@logger": ["src/loaders/logger"],
