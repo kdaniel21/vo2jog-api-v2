@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { addSeconds } from 'date-fns'
-import { PrismaClient, RefreshToken, Role, User } from '@prisma/client'
+import { PrismaClient, Role, User } from '@prisma/client'
 import EventEmitter from 'eventemitter3'
 import { inject, injectable } from 'tsyringe'
 import { Logger } from 'pino'
@@ -15,7 +15,7 @@ import { AppError } from '@utils/app-error'
 @injectable()
 export default class AuthService {
   constructor(
-    @inject('prisma') private prisma: PrismaClient,
+    @inject('prisma') private prismaClient: PrismaClient,
     @inject('logger') private logger: Logger,
     @inject('authSubscriber') private authSubscriber: EventEmitter,
     private mailerService: MailerService,
@@ -27,7 +27,7 @@ export default class AuthService {
     const { email, password } = userCredentialsDTO
 
     this.logger.info('Attempting login with user %s', email)
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prismaClient.user.findUnique({
       where: { email },
       include: { profile: true },
     })
@@ -51,10 +51,10 @@ export default class AuthService {
     const { name, email, password } = userDTO
 
     this.logger.info('Checking email address availability for %s', email)
-    const isEmailRegistered = await this.prisma.user.count({ where: { email } })
+    const isEmailRegistered = await this.prismaClient.user.count({ where: { email } })
     if (isEmailRegistered) throw new AppError('Email address already registered.', 403)
 
-    const user = await this.prisma.user.create({
+    const user = await this.prismaClient.user.create({
       data: { name, email, password },
     })
 
@@ -83,7 +83,7 @@ export default class AuthService {
 
   public logout({ userId, refreshToken }: { userId: string; refreshToken: string }) {
     const hashedToken = this.hashToken(refreshToken)
-    return this.prisma.refreshToken.deleteMany({
+    return this.prismaClient.refreshToken.deleteMany({
       where: { token: hashedToken, userId },
     })
   }
@@ -93,7 +93,7 @@ export default class AuthService {
     const { token, hashedToken } = this.generateHashedTokenPair()
     const expiresAt = addSeconds(new Date(), config.auth.passwordResetLifetime)
 
-    const updated = await this.prisma.user.updateMany({
+    const updated = await this.prismaClient.user.updateMany({
       where: { email },
       data: { passwordResetToken: hashedToken, passwordResetTokenExpiresAt: expiresAt },
     })
@@ -114,7 +114,7 @@ export default class AuthService {
 
       this.logger.info('Attempting to reset password with using token %s', token)
 
-      const updated = await this.prisma.user.updateMany({
+      const updated = await this.prismaClient.user.updateMany({
         where: {
           passwordResetToken: token,
           passwordResetTokenExpiresAt: { gte: new Date() },
@@ -138,7 +138,7 @@ export default class AuthService {
    */
   private getValidRefreshToken(refreshToken: string) {
     const hashedRefreshToken = this.hashToken(refreshToken)
-    return this.prisma.refreshToken.findFirst({
+    return this.prismaClient.refreshToken.findFirst({
       where: { token: hashedRefreshToken, expiresAt: { gte: new Date() } },
       include: { user: { select: { id: true, email: true, role: true } } },
     })
@@ -147,7 +147,7 @@ export default class AuthService {
   private async replaceExistingRefreshToken(refreshTokenId: number): Promise<string> {
     const { token, hashedToken } = this.generateHashedTokenPair()
 
-    await this.prisma.refreshToken.update({
+    await this.prismaClient.refreshToken.update({
       where: { id: refreshTokenId },
       data: { token: hashedToken },
     })
@@ -161,7 +161,7 @@ export default class AuthService {
     const { token, hashedToken } = this.generateHashedTokenPair()
     const expiresAt = addSeconds(new Date(), config.auth.refreshTokenLifetime)
 
-    await this.prisma.refreshToken.create({
+    await this.prismaClient.refreshToken.create({
       data: {
         token: hashedToken,
         expiresAt,
