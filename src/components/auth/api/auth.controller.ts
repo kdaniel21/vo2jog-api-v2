@@ -11,7 +11,7 @@ export default class AuthController {
   ) {}
 
   async login(ctx: Context) {
-    this.logger.info('Signing in with body %s', ctx.request.body)
+    this.logger.info('Signing in')
     const { email, password } = ctx.request.body
     const userCredentials = await this.authService.login({ email, password })
 
@@ -19,7 +19,7 @@ export default class AuthController {
   }
 
   async register(ctx: Context) {
-    this.logger.info('Signing up with body %s', ctx.request.body)
+    this.logger.info('Signing up with')
     const { email, name, password } = ctx.request.body
     const userCredentials = await this.authService.register({ email, password, name })
 
