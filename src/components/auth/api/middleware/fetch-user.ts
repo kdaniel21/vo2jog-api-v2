@@ -3,18 +3,23 @@ import { Next, Context } from 'koa'
 import compose from 'koa-compose'
 import { container } from 'tsyringe'
 import validateJwt from '@auth/api/middleware/validate-jwt'
+import { Logger } from 'pino-multi-stream'
+
+const logger: Logger = container.resolve('logger')
 
 export const fetchUser = async (ctx: Context, next: Next) => {
   try {
     const prismaClient: PrismaClient = container.resolve('prisma')
 
     const { id }: { id: string } = ctx.state.auth.user
+    logger.info('fetching user with id %s', id)
     const userRecord = await prismaClient.user.findUnique({
       where: { id },
       include: { profile: true },
     })
     if (!userRecord) throw new Error()
 
+    logger.info('User %s fetched', userRecord.email)
     ctx.state.auth.user = { ...userRecord }
     await next()
   } catch {
