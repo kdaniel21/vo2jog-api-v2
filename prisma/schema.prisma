@@ -25,7 +25,7 @@ model User {
   passwordResetToken          String?        @map("password_reset_token")
   passwordResetTokenExpiresAt DateTime?      @map("password_reset_token_expires_at")
   profile                     Organizer?
-  deleted                     Boolean        @default(false)
+  isDeleted                   Boolean        @default(false)
   createdAt                   DateTime       @default(now()) @map("created_at")
   updatedAt                   DateTime       @updatedAt @map("updated_at")
 
@@ -63,7 +63,7 @@ model OrganizerContactPerson {
   name        String
   email       String?
   phoneNumber String?   @map("phone_number")
-  public      Boolean   @default(true)
+  isPublic    Boolean   @default(true)
 
   @@map("organizer_contact_people")
 }
