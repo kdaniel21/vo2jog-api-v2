@@ -23,7 +23,6 @@ const removeFields = (object: any, topLevelKey: string) => {
  * The recursive function runs for every (deeply) nested object
  */
 export default async (ctx: Context, next: Next) => {
-  console.log('middleware ran')
   try {
     await next()
   } finally {
