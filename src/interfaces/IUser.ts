@@ -1,9 +1,9 @@
-export interface IUserCredentialsDTO {
+export interface IUserCredentialsDto {
   email: string
   password: string
 }
 
-export interface IUserRegisterDTO {
+export interface IUserRegisterDto {
   email: string
   password: string
   name: string

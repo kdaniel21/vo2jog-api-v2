@@ -6,7 +6,7 @@ import { PrismaClient, Role, User } from '@prisma/client'
 import EventEmitter from 'eventemitter3'
 import { inject, injectable } from 'tsyringe'
 import { Logger } from 'pino'
-import { IUserCredentialsDTO, IUserRegisterDTO } from '@interfaces/IUser'
+import { IUserCredentialsDto, IUserRegisterDto } from '@interfaces/IUser'
 import config from '@config'
 import { authEvents } from '@auth/auth.subscribers'
 import MailerService from '@mailer/mailer.service'
@@ -22,9 +22,9 @@ export default class AuthService {
   ) {}
 
   public async login(
-    userCredentialsDTO: IUserCredentialsDTO,
+    userCredentials: IUserCredentialsDto,
   ): Promise<{ user: User; refreshToken: string; accessToken: string }> {
-    const { email, password } = userCredentialsDTO
+    const { email, password } = userCredentials
 
     this.logger.info('Attempting login with user %s', email)
     const user = await this.prismaClient.user.findUnique({
@@ -46,9 +46,9 @@ export default class AuthService {
   }
 
   public async register(
-    userDTO: IUserRegisterDTO,
+    userData: IUserRegisterDto,
   ): Promise<{ user: User; refreshToken: string; accessToken: string }> {
-    const { name, email, password } = userDTO
+    const { name, email, password } = userData
 
     this.logger.info('Checking email address availability for %s', email)
     const isEmailRegistered = await this.prismaClient.user.count({ where: { email } })
