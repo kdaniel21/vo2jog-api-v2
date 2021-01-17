@@ -6,7 +6,8 @@ import includeTokens from '@auth/api/middleware/include-tokens'
 import { container } from 'tsyringe'
 import { Logger } from 'pino'
 
-const logger: Logger = container.resolve('logger')
+// const logger: Logger = container.resolve('logger')
+const logger: any = {}
 
 export const validateJwt = async (ctx: Context, next: Next) => {
   try {

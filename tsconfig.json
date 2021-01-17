@@ -21,6 +21,7 @@
       "@components/*": ["src/components/*"],
       "@interfaces/*": ["src/interfaces/*"],
       "@auth/*": ["src/components/auth/*"],
+      "@event/*": ["src/components/event/*"],
       "@mailer/*": ["src/components/mailer/*"]
     },
     "allowSyntheticDefaultImports": true,

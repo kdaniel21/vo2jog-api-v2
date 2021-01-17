@@ -99,7 +99,7 @@ model Event {
   socialMedia   SocialMedia[]
   competitions  EventCompetition[]
   scheduleItems EventScheduleItem[]
-  isDeleted     Boolean             @map("is_deleted")
+  isDeleted     Boolean             @map("is_deleted") @default(false)
   createdAt     DateTime            @default(now()) @map("created_at")
   updatedAt     DateTime            @updatedAt @map("updated_at")
 

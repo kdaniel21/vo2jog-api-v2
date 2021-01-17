@@ -5,10 +5,9 @@ import { container } from 'tsyringe'
 import validateJwt from '@auth/api/middleware/validate-jwt'
 import { Logger } from 'pino-multi-stream'
 
-const logger: Logger = container.resolve('logger')
-
 export const fetchUser = async (ctx: Context, next: Next) => {
   try {
+    const logger: Logger = container.resolve('logger')
     const prismaClient: PrismaClient = container.resolve('prisma')
 
     const { id }: { id: string } = ctx.state.auth.user

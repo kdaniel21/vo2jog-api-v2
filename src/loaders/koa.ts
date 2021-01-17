@@ -4,7 +4,7 @@ import cors from 'koa2-cors'
 import helmet from 'koa-helmet'
 
 import { loggerMiddleware } from '@logger'
-import router from '@components/router'
+import router from '@api/router'
 import errorHandler from '@api/middleware/error-handler'
 import hiddenFields from '@api/middleware/hidden-fields'
 
