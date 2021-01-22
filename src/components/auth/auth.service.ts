@@ -15,10 +15,10 @@ import { AppError } from '@utils/app-error'
 @injectable()
 export default class AuthService {
   constructor(
-    @inject('prisma') private prismaClient: PrismaClient,
+    @inject('prisma') private prisma: PrismaClient,
     @inject('logger') private logger: Logger,
     @inject('authSubscriber') private authSubscriber: EventEmitter,
-    private mailerService: MailerService,
+    @inject(MailerService) private mailerService: MailerService,
   ) {}
 
   public async login(
@@ -27,7 +27,7 @@ export default class AuthService {
     const { email, password } = userCredentials
 
     this.logger.info('Attempting login with user %s', email)
-    const user = await this.prismaClient.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { email },
       include: { profile: true },
     })
@@ -51,10 +51,10 @@ export default class AuthService {
     const { name, email, password } = userData
 
     this.logger.info('Checking email address availability for %s', email)
-    const isEmailRegistered = await this.prismaClient.user.count({ where: { email } })
+    const isEmailRegistered = await this.prisma.user.count({ where: { email } })
     if (isEmailRegistered) throw new AppError('Email address already registered.', 403)
 
-    const user = await this.prismaClient.user.create({
+    const user = await this.prisma.user.create({
       data: { name, email, password },
     })
 
@@ -83,7 +83,7 @@ export default class AuthService {
 
   public logout({ userId, refreshToken }: { userId: string; refreshToken: string }) {
     const hashedToken = this.hashToken(refreshToken)
-    return this.prismaClient.refreshToken.deleteMany({
+    return this.prisma.refreshToken.deleteMany({
       where: { token: hashedToken, userId },
     })
   }
@@ -93,7 +93,7 @@ export default class AuthService {
     const { token, hashedToken } = this.generateHashedTokenPair()
     const expiresAt = addSeconds(new Date(), config.auth.passwordResetLifetime)
 
-    const updated = await this.prismaClient.user.updateMany({
+    const updated = await this.prisma.user.updateMany({
       where: { email },
       data: { passwordResetToken: hashedToken, passwordResetTokenExpiresAt: expiresAt },
     })
@@ -114,7 +114,7 @@ export default class AuthService {
 
       this.logger.info('Attempting to reset password with using token %s', token)
 
-      const updated = await this.prismaClient.user.updateMany({
+      const updated = await this.prisma.user.updateMany({
         where: {
           passwordResetToken: token,
           passwordResetTokenExpiresAt: { gte: new Date() },
@@ -138,7 +138,7 @@ export default class AuthService {
    */
   private getValidRefreshToken(refreshToken: string) {
     const hashedRefreshToken = this.hashToken(refreshToken)
-    return this.prismaClient.refreshToken.findFirst({
+    return this.prisma.refreshToken.findFirst({
       where: { token: hashedRefreshToken, expiresAt: { gte: new Date() } },
       include: { user: { select: { id: true, email: true, role: true } } },
     })
@@ -147,7 +147,7 @@ export default class AuthService {
   private async replaceExistingRefreshToken(refreshTokenId: number): Promise<string> {
     const { token, hashedToken } = this.generateHashedTokenPair()
 
-    await this.prismaClient.refreshToken.update({
+    await this.prisma.refreshToken.update({
       where: { id: refreshTokenId },
       data: { token: hashedToken },
     })
@@ -161,7 +161,7 @@ export default class AuthService {
     const { token, hashedToken } = this.generateHashedTokenPair()
     const expiresAt = addSeconds(new Date(), config.auth.refreshTokenLifetime)
 
-    await this.prismaClient.refreshToken.create({
+    await this.prisma.refreshToken.create({
       data: {
         token: hashedToken,
         expiresAt,

@@ -1,34 +1,56 @@
-import { Event, Prisma, PrismaClient } from '@prisma/client'
-import { inject, injectable } from 'tsyringe'
+// import BaseService from '@api/base/base.service'
+// import {
+//   Event,
+//   EventCompetition,
+//   EventQuestion,
+//   Prisma,
+//   PrismaClient,
+// } from '@prisma/client'
+// import { inject, injectable } from 'tsyringe'
 
-@injectable()
-export class EventService {
-  constructor(@inject('prisma') private prismaClient: PrismaClient) {}
+// @injectable()
+// export default class EventService extends BaseService<Event, Prisma.EventDelegate> {
+//   constructor(@inject('prisma') private prisma: PrismaClient) {
+//     super(prisma.event)
+//   }
 
-  findEvents(
-    params: {
-      skip?: number
-      take?: number
-      where?: Prisma.EventWhereInput
-      orderBy?: Prisma.EventOrderByInput
-    } = {},
-  ): Promise<Event[]> {
-    return this.prismaClient.event.findMany(params)
-  }
+//   createCompetition(
+//     eventId: string,
+//     data: Prisma.EventCompetitionCreateInput,
+//   ): Promise<EventCompetition> {
+//     return this.prisma.eventCompetition.create({
+//       data: { ...data, event: { connect: { id: eventId } } },
+//     })
+//   }
 
-  findEventById(id: string): Promise<Event | null> {
-    return this.prismaClient.event.findUnique({ where: { id } })
-  }
+//   updateCompetitionById(
+//     competitionId: string,
+//     data: Prisma.EventCompetitionUpdateInput,
+//   ): Promise<EventCompetition | null> {
+//     return this.prisma.eventCompetition.update({ where: { id: competitionId }, data })
+//   }
 
-  createEvent(data: Prisma.EventCreateInput): Promise<Event> {
-    return this.prismaClient.event.create({ data })
-  }
+//   async deleteCompetitionById(competitionId: string): Promise<void> {
+//     await this.prisma.eventCompetition.delete({ where: { id: competitionId } })
+//   }
 
-  updateEventById(id: string, data: Prisma.EventUpdateInput): Promise<Event> {
-    return this.prismaClient.event.update({ where: { id }, data })
-  }
+//   async createQuestion(
+//     eventId: string,
+//     data: Prisma.EventQuestionCreateInput,
+//   ): Promise<EventQuestion> {
+//     return this.prisma.eventQuestion.create({
+//       data: { ...data, event: { connect: { id: eventId } } },
+//     })
+//   }
 
-  deleteEventById(id: string) {
-    return this.prismaClient.event.delete({ where: { id } })
-  }
-}
+//   updateQuestionById(
+//     questionId: string,
+//     data: Prisma.EventCompetitionUpdateInput,
+//   ): Promise<EventCompetition | null> {
+//     return this.prisma.eventCompetition.update({ where: { id: questionId }, data })
+//   }
+
+//   async deleteQuestionById(questionId: string): Promise<void> {
+//     await this.prisma.eventCompetition.delete({ where: { id: questionId } })
+//   }
+// }

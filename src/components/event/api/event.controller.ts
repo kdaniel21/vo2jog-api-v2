@@ -1,63 +1,45 @@
-import ApiFeatures from '@utils/extract-api-features'
-import { Logger } from 'pino-multi-stream'
-import { inject, injectable } from 'tsyringe'
-import { Context } from 'koa'
-import { EventService } from '../event.service'
-import { Prisma } from '@prisma/client'
-import { AppError } from '@utils/app-error'
+// import BaseController from '@api/base/base.controller'
+// import { inject, injectable } from 'tsyringe'
+// import { Event, EventLocation } from '@prisma/client'
+// import EventService from '../event.service'
+// import { Context } from 'koa'
 
-@injectable()
-export class EventController {
-  constructor(
-    @inject(EventService) private eventService: EventService,
-    @inject('logger') private logger: Logger,
-  ) {}
+// @injectable()
+// export default class EventController extends BaseController<Event> {
+//   constructor(@inject(EventService) private eventService: EventService) {
+//     super(eventService)
+//   }
 
-  async createEvent(ctx: Context) {
-    const { body } = ctx.request
+//   async createCompetition(ctx: Context) {
+//     const { id } = ctx.params
+//     const { body } = ctx.request
 
-    const newEvent = await this.eventService.createEvent(body)
+//     const competition = await this.eventService.createCompetition(id, body)
 
-    ctx.body = { data: newEvent }
-  }
+//     ctx.body = { ...competition }
+//   }
 
-  async findEventById(ctx: Context) {
-    const { id } = ctx.params
-    if (!id) throw new AppError('Invalid ID.')
+//   async updateCompetition(ctx: Context) {
+//     const { competitionId } = ctx.params
+//     const { body } = ctx.request
 
-    const event = await this.eventService.findEventById(id)
+//     const competition = await this.eventService.updateCompetitionById(competitionId, body)
 
-    ctx.body = { data: event }
-  }
+//     ctx.body = { ...competition }
+//   }
 
-  async findEvents(ctx: Context) {
-    const { query, ...features } = new ApiFeatures<
-      Prisma.EventWhereInput,
-      Prisma.EventOrderByInput
-    >(ctx)
+//   async deleteCompetition(ctx: Context) {
+//     const { competitionId } = ctx.params
 
-    console.log(features)
+//     await this.eventService.deleteCompetitionById(competitionId)
 
-    const events = await this.eventService.findEvents()
+//     ctx.status = 204
+//   }
 
-    ctx.body = { data: events }
-  }
+//   async createQuestion(ctx: Context) {
+//     const { eventId } = ctx.params
+//     const { body } = ctx.request
 
-  async updateEventById(ctx: Context) {
-    const { id } = ctx.params
-    if (!id) throw new AppError('Invalid ID.')
-
-    const event = await this.eventService.updateEventById(id, ctx.request.body)
-
-    ctx.body = { data: event }
-  }
-
-  async deleteEvent(ctx: Context) {
-    const { id } = ctx.params
-    if (!id) throw new AppError('Invalid ID.')
-
-    await this.eventService.deleteEventById(id)
-
-    ctx.body = { status: 'success' }
-  }
-}
+//     const question = await this.eventService.createQuestion
+//   }
+// }
