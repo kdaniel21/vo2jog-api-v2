@@ -15,7 +15,6 @@
     "schema": "src/database/prisma/schema.prisma"
   },
   "dependencies": {
-    "@prisma/client": "^2.14.0",
     "bcrypt": "^5.0.0",
     "date-fns": "^2.16.1",
     "dotenv": "^8.2.0",
@@ -34,7 +33,6 @@
     "tsyringe": "^4.4.0"
   },
   "devDependencies": {
-    "@prisma/cli": "^2.14.0",
     "@types/bcrypt": "^3.0.0",
     "@types/faker": "^5.1.5",
     "@types/jest": "^26.0.20",
