@@ -16,7 +16,7 @@ export class Organizer {
   @PrimaryKey()
   id: string = nanoid()
 
-  @OneToOne({ inversedBy: 'userProfile', orphanRemoval: true })
+  @OneToOne()
   user!: User
 
   @Property()
@@ -33,7 +33,25 @@ export class Organizer {
 }
 
 @Entity()
-class OrganizerContactPerson {
+export class OrganizerSocialMedia {
+  @PrimaryKey()
+  id!: number
+
+  @ManyToOne()
+  organizer!: Organizer
+
+  @Property()
+  name!: string
+
+  @Property()
+  link!: String
+
+  @Property()
+  icon: string = 'globe'
+}
+
+@Entity()
+export class OrganizerContactPerson {
   @PrimaryKey()
   id!: number
 
@@ -51,22 +69,4 @@ class OrganizerContactPerson {
 
   @Property()
   isPublic: boolean = false
-}
-
-@Entity()
-class OrganizerSocialMedia {
-  @PrimaryKey()
-  id!: number
-
-  @ManyToOne()
-  organizer!: Organizer
-
-  @Property()
-  name!: string
-
-  @Property()
-  link!: String
-
-  @Property()
-  icon: string = 'globe'
 }

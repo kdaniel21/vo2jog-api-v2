@@ -1,11 +1,12 @@
 import { Entity, PrimaryKey, OneToOne, Property } from '@mikro-orm/core'
+import { Event } from './event.entity'
 
 @Entity()
 export class EventLocation {
   @PrimaryKey()
   id!: number
 
-  @OneToOne({ inversedBy: 'eventLocation', orphanRemoval: true })
+  @OneToOne()
   event!: Event
 
   @Property()

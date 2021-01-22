@@ -6,7 +6,6 @@ import helmet from 'koa-helmet'
 import { loggerMiddleware } from '@logger'
 import router from '@api/router'
 import errorHandler from '@api/middleware/error-handler'
-import hiddenFields from '@api/middleware/hidden-fields'
 
 export default (app: Koa<Koa.DefaultState, Koa.DefaultContext>) => {
   app
@@ -15,9 +14,8 @@ export default (app: Koa<Koa.DefaultState, Koa.DefaultContext>) => {
     .use(bodyParser())
     .use(cors())
     .use(loggerMiddleware)
-    .use(hiddenFields)
     .use(errorHandler)
-    // Load routes
-    .use(router().routes())
-    .use(router().allowedMethods())
+  // Load routes
+  // .use(router().routes())
+  // .use(router().allowedMethods())
 }

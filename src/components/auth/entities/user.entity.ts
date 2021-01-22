@@ -10,6 +10,7 @@ import {
 } from '@mikro-orm/core'
 import { nanoid } from 'nanoid'
 import { Organizer } from './organizer.entity'
+import { RefreshToken } from './refresh-token.entity'
 
 @Entity()
 export class User {
@@ -43,7 +44,7 @@ export class User {
   @Property({ hidden: true })
   passwordResetTokenExpiresAt?: Date
 
-  @OneToOne({ mappedBy: 'userProfile' })
+  @OneToOne(() => Organizer, organizer => organizer.user)
   profile!: Organizer
 
   @Property({ hidden: true })
@@ -59,22 +60,4 @@ export class User {
 enum UserRole {
   USER = 'user',
   ORGANIZER = 'organizer',
-}
-
-@Entity()
-class RefreshToken {
-  @PrimaryKey()
-  id!: number
-
-  @Property()
-  token!: string
-
-  @ManyToOne()
-  user!: User
-
-  @Property()
-  expiresAt!: Date
-
-  @Property({ defaultRaw: 'now' })
-  createdAt!: Date
 }

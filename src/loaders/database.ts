@@ -1,6 +1,6 @@
-import { MikroORM } from '@mikro-orm/core'
+import { EntityManager, MikroORM } from '@mikro-orm/core'
 
-export default async () => {
+export default async (): Promise<EntityManager> => {
   // const prisma = new PrismaClient()
 
   // // Load middleware

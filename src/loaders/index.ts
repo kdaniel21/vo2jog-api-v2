@@ -6,14 +6,14 @@ import dbLoader from '@loaders/database'
 import dependencyInjectionLoader from '@loaders/dependency-injection'
 import subscribersLoader from '@loaders/subscribers'
 
-export default (app: Koa<Koa.DefaultState, Koa.DefaultContext>) => {
+export default async (app: Koa<Koa.DefaultState, Koa.DefaultContext>) => {
   // DB Connection
-  const prisma = dbLoader()
+  const entityManager = await dbLoader()
 
   const subscribers = subscribersLoader()
 
   // Dependency Injection
-  dependencyInjectionLoader({ prisma, subscribers })
+  dependencyInjectionLoader({ entityManager, subscribers })
 
   // Koa server
   koaLoader(app)

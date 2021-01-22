@@ -1,19 +1,26 @@
 import { container } from 'tsyringe'
 import Logger from '@logger'
-import { PrismaClient } from '@prisma/client'
+import { EntityManager } from '@mikro-orm/core'
 
-export default ({ prisma, subscribers }: { prisma: PrismaClient; subscribers: any }) => {
-  try {
-    container.registerInstance('prisma', prisma)
-    container.registerInstance('logger', Logger)
+export default ({
+  entityManager,
+  subscribers,
+}: {
+  entityManager: EntityManager
+  subscribers: any
+}) => {
+  console.log(entityManager)
+  // try {
+  //   container.registerInstance('prisma', )
+  //   container.registerInstance('logger', Logger)
 
-    // Register subscribers
-    Object.keys(subscribers).forEach(subscriberName =>
-      container.registerInstance(subscriberName, subscribers[subscriberName]),
-    )
+  //   // Register subscribers
+  //   Object.keys(subscribers).forEach(subscriberName =>
+  //     container.registerInstance(subscriberName, subscribers[subscriberName]),
+  //   )
 
-    Logger.info('Dependencies injected successfully!')
-  } catch (err) {
-    Logger.error('Error while injecting dependencies %o', err)
-  }
+  //   Logger.info('Dependencies injected successfully!')
+  // } catch (err) {
+  //   Logger.error('Error while injecting dependencies %o', err)
+  // }
 }

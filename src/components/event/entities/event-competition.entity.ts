@@ -1,5 +1,7 @@
 import { Entity, PrimaryKey, ManyToOne, Property, Enum, OneToMany } from '@mikro-orm/core'
 import { nanoid } from 'nanoid'
+import { EventCompetitionPriceStep } from './event-competition-price-step.entity'
+import { Event } from './event.entity'
 
 @Entity()
 export class EventCompetition {
@@ -45,28 +47,4 @@ enum DistanceUnit {
   MILE,
   METER,
   FOOT,
-}
-
-@Entity()
-export class EventCompetitionPriceStep {
-  @PrimaryKey()
-  id!: number
-
-  @ManyToOne()
-  competition!: EventCompetition
-
-  @Property()
-  price!: number
-
-  @Enum()
-  currency!: Currency
-
-  @Property()
-  endTime!: Date
-}
-
-enum Currency {
-  EUR,
-  HUF,
-  USD,
 }

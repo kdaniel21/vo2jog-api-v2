@@ -1,5 +1,6 @@
 import { Organizer } from '@components/auth/entities/organizer.entity'
 import {
+  Collection,
   Entity,
   ManyToOne,
   OneToMany,
@@ -19,7 +20,7 @@ export class Event {
   @PrimaryKey()
   id: string = nanoid()
 
-  @ManyToOne()
+  @ManyToOne(() => Organizer)
   organizer!: Organizer
 
   @Property()
@@ -43,20 +44,20 @@ export class Event {
   @Property()
   description?: string
 
-  @OneToOne({ mappedBy: 'eventLocation' })
+  @OneToOne(() => EventLocation, location => location.event)
   location!: EventLocation
 
   @OneToMany(() => EventDocument, document => document.event)
-  documents!: EventDocument
+  documents = new Collection<EventDocument>(this)
 
   @OneToMany(() => EventQuestion, question => question.event)
-  questions!: EventQuestion
+  questions = new Collection<EventQuestion>(this)
 
   @OneToMany(() => EventCompetition, competition => competition.event)
-  competitions!: EventCompetition
+  competitions = new Collection<EventCompetition>(this)
 
   @OneToMany(() => EventScheduleItem, scheduleItem => scheduleItem.event)
-  scheduleItems!: EventScheduleItem
+  scheduleItems = new Collection<EventScheduleItem>(this)
 
   @Property({ hidden: true })
   isDeleted: boolean = false

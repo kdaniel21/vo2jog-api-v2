@@ -8,7 +8,7 @@ import loader from '@loaders'
 async function startServer() {
   const app = new Koa()
 
-  loader(app)
+  await loader(app)
 
   app
     .listen(config.port)
