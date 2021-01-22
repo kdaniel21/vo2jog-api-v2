@@ -1,11 +1,14 @@
-import { PrismaClient } from '@prisma/client'
-import registerMiddleware from '@database/middleware/index'
+import { MikroORM } from '@mikro-orm/core'
 
-export default (): PrismaClient => {
-  const prisma = new PrismaClient()
+export default async () => {
+  // const prisma = new PrismaClient()
 
-  // Load middleware
-  registerMiddleware(prisma)
+  // // Load middleware
+  // registerMiddleware(prisma)
 
-  return prisma
+  // return prisma
+
+  const orm = await MikroORM.init()
+
+  return orm.em
 }

@@ -11,8 +11,11 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "prisma": {
-    "schema": "src/database/prisma/schema.prisma"
+  "mikro-orm": {
+    "useTsNode": true,
+    "configPaths": [
+      "./src/config/mikro-orm.config.ts"
+    ]
   },
   "dependencies": {
     "@mikro-orm/core": "^4.3.4",
@@ -31,10 +34,12 @@
     "koa-pino-logger": "^3.0.0",
     "koa-router": "^10.0.0",
     "koa2-cors": "^2.0.6",
+    "nanoid": "^3.1.20",
     "pino-multi-stream": "^5.1.1",
     "tsyringe": "^4.4.0"
   },
   "devDependencies": {
+    "@mikro-orm/cli": "^4.3.4",
     "@types/bcrypt": "^3.0.0",
     "@types/faker": "^5.1.5",
     "@types/jest": "^26.0.20",
