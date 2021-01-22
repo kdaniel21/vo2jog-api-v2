@@ -15,6 +15,8 @@
     "schema": "src/database/prisma/schema.prisma"
   },
   "dependencies": {
+    "@mikro-orm/core": "^4.3.4",
+    "@mikro-orm/postgresql": "^4.3.4",
     "bcrypt": "^5.0.0",
     "date-fns": "^2.16.1",
     "dotenv": "^8.2.0",
