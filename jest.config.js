@@ -12,7 +12,7 @@ module.exports = {
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
     prefix: '<rootDir>/',
   }),
-  setupFilesAfterEnv: [`<rootDir>/src/config/tests/jest.global-setup.ts`, 'jest-extended'],
+  setupFilesAfterEnv: [`<rootDir>/src/config/jest.global-setup.ts`, 'jest-extended'],
   verbose: true,
   collectCoverage: true,
   collectCoverageFrom: ['<rootDir>/src/**/*.ts'],
