@@ -3,8 +3,9 @@ import bcrypt from 'bcrypt'
 import AuthService from '@auth/auth.service'
 import config from '@config'
 import { AppError } from '@utils/app-error'
+import dbLoader from '@loaders/database'
 
-describe('Auth Service', () => {
+describe.only('Auth Service', () => {
   const fakeUserCredentials = {
     email: faker.internet.email(),
     password: faker.internet.password(),
@@ -16,26 +17,23 @@ describe('Auth Service', () => {
 
   const fakeUserEntry = {
     ...fakeUser,
-    userId: faker.random.uuid(),
+    id: faker.random.uuid(),
     password: bcrypt.hashSync(fakeUserCredentials.password, config.auth.saltRounds),
   }
 
   // DEPENDENCIES
-  const prismaClient = {
-    user: {
-      findUnique: jest.fn(),
-      count: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      updateMany: jest.fn(),
-    },
-    refreshToken: {
-      create: jest.fn(),
-      deleteMany: jest.fn(),
-      findFirst: jest.fn(),
-      update: jest.fn(),
-    },
+  const userRepository = {
+    findOne: jest.fn(),
+    count: jest.fn(),
+    persistAndFlush: jest.fn(),
+    nativeUpdate: jest.fn(),
   }
+  const refreshTokenRepository = {
+    nativeDelete: jest.fn(),
+    findOne: jest.fn(),
+    persistAndFlush: jest.fn(),
+  }
+
   const logger = {
     info: jest.fn(),
   }
@@ -47,9 +45,16 @@ describe('Auth Service', () => {
   // Services
   let authService: AuthService
 
-  beforeEach(() => {
+  // HOOKSK
+  beforeAll(async () => {
+    // Initialize MikroORM so that entities can be used
+    await dbLoader()
+  })
+
+  beforeEach(async () => {
     authService = new AuthService(
-      prismaClient as any,
+      userRepository as any,
+      refreshTokenRepository as any,
       logger as any,
       authSubscriber as any,
       mailerService as any,
@@ -61,7 +66,7 @@ describe('Auth Service', () => {
   // TESTS
   describe('Login feature', () => {
     it('should login with valid credentials', async () => {
-      prismaClient.user.findUnique.mockResolvedValueOnce(fakeUserEntry)
+      userRepository.findOne.mockResolvedValueOnce(fakeUserEntry)
 
       const { user, accessToken, refreshToken } = await authService.login(
         fakeUserCredentials,
@@ -91,20 +96,20 @@ describe('Auth Service', () => {
     })
   })
 
-  describe('Register feature', () => {
-    it('should create a new user', async () => {
-      prismaClient.user.create.mockResolvedValueOnce(fakeUserEntry)
-      prismaClient.user.count.mockResolvedValueOnce(0)
+  describe.only('Register feature', () => {
+    it.only('should create a new user', async () => {
+      userRepository.count.mockResolvedValueOnce(0)
 
       const { user, accessToken, refreshToken } = await authService.register(fakeUser)
 
-      expect(user).toMatchObject(fakeUserEntry)
+      expect(user.email).toBe(fakeUser.email)
+      expect(user.id).toBeTruthy()
       expect(refreshToken).toBeTruthy()
       expect(accessToken).toBeTruthy()
     })
 
     it('should reject registration with existing email', () => {
-      prismaClient.user.count.mockResolvedValueOnce(1)
+      userRepository.count.mockResolvedValueOnce(1)
 
       expect(async () => await authService.register(fakeUser)).rejects.toThrow()
     })
@@ -119,8 +124,8 @@ describe('Auth Service', () => {
         expiresAt: faker.date.future(),
         user: { id: faker.random.uuid(), ...fakeUser },
       }
-      prismaClient.refreshToken.findFirst.mockResolvedValueOnce(refreshTokenRecord)
-      const updateRefreshToken = prismaClient.refreshToken.update
+      refreshTokenRepository.findOne.mockResolvedValueOnce(refreshTokenRecord)
+      const updateRefreshToken = refreshTokenRepository.persistAndFlush
 
       const { refreshToken, accessToken } = await authService.refreshTokens(
         validRefreshToken,
@@ -133,8 +138,8 @@ describe('Auth Service', () => {
 
     it('should throw an error when using invalid refresh token', () => {
       const invalidRefreshToken = 'invalid'
-      prismaClient.refreshToken.findFirst.mockResolvedValueOnce(null)
-      const updateRefreshToken = prismaClient.refreshToken.update
+      refreshTokenRepository.findOne.mockResolvedValueOnce(null)
+      const updateRefreshToken = refreshTokenRepository.persistAndFlush
 
       expect(
         async () => await authService.refreshTokens(invalidRefreshToken),
@@ -145,7 +150,7 @@ describe('Auth Service', () => {
 
   describe('Logout feature', () => {
     it('should remove refresh token from database', async () => {
-      const removeToken = prismaClient.refreshToken.deleteMany
+      const removeToken = refreshTokenRepository.nativeDelete
       await authService.logout({
         userId: faker.random.uuid(),
         refreshToken: faker.random.alphaNumeric(),
@@ -157,9 +162,11 @@ describe('Auth Service', () => {
 
   describe('Create password reset token', () => {
     it('should generate password reset token and send it via email', async () => {
+      const updateUser = userRepository.nativeUpdate
+
       await authService.createPasswordResetToken(fakeUser.email)
 
-      expect(prismaClient.user.updateMany).toBeCalled()
+      expect(updateUser).toBeCalled()
       // TODO expect email service to be called
     })
   })

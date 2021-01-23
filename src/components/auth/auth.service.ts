@@ -100,7 +100,6 @@ export default class AuthService {
   public async createPasswordResetToken(email: string): Promise<void> {
     this.logger.info('Attempting creating password reset token for email %s', email)
     const { token, hashedToken } = this.generateHashedTokenPair()
-    console.log(token)
     const expiresAt = addSeconds(new Date(), config.auth.passwordResetLifetime)
 
     const count = await this.userRepository.nativeUpdate(
