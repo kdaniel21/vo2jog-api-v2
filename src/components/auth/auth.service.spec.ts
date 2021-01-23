@@ -19,6 +19,7 @@ describe.only('Auth Service', () => {
     ...fakeUser,
     id: faker.random.uuid(),
     password: bcrypt.hashSync(fakeUserCredentials.password, config.auth.saltRounds),
+    refreshTokens: { add: jest.fn() },
   }
 
   // DEPENDENCIES
@@ -163,6 +164,7 @@ describe.only('Auth Service', () => {
   describe('Create password reset token', () => {
     it('should generate password reset token and send it via email', async () => {
       const updateUser = userRepository.nativeUpdate
+      updateUser.mockResolvedValue(1)
 
       await authService.createPasswordResetToken(fakeUser.email)
 
