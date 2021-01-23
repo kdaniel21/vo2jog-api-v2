@@ -96,8 +96,8 @@ describe.only('Auth Service', () => {
     })
   })
 
-  describe.only('Register feature', () => {
-    it.only('should create a new user', async () => {
+  describe('Register feature', () => {
+    it('should create a new user', async () => {
       userRepository.count.mockResolvedValueOnce(0)
 
       const { user, accessToken, refreshToken } = await authService.register(fakeUser)
