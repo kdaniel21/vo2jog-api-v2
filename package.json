@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "NODE_ENV=development ts-node-dev --files --exit-child -r tsconfig-paths/register src/app.ts",
     "test": "NODE_ENV=test jest --watchAll",
-    "prettier": "prettier --write '**/*.{.ts,js,css,html}'"
+    "prettier": "prettier --write '**/*.{.ts,js,css,html}'",
+    "migrate": "npx mikro-orm schema:drop -r && rm -rf ./migrations && npx mikro-orm migration:create --initial && npx mikro-orm schema:create -r"
   },
   "keywords": [],
   "author": "",
