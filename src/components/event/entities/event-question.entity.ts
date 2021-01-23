@@ -1,11 +1,9 @@
+import { BaseEntity } from '@api/base/base.entity'
 import { Entity, PrimaryKey, ManyToOne, Property } from '@mikro-orm/core'
 import { Event } from './event.entity'
 
 @Entity()
-export class EventQuestion {
-  @PrimaryKey()
-  id!: number
-
+export class EventQuestion extends BaseEntity {
   @ManyToOne()
   event!: Event
 

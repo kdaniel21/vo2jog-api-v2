@@ -1,3 +1,4 @@
+import { BaseEntity } from '@api/base/base.entity'
 import { Event } from '@components/event/entities/event.entity'
 import {
   Collection,
@@ -12,10 +13,7 @@ import { nanoid } from 'nanoid'
 import { User } from './user.entity'
 
 @Entity()
-export class Organizer {
-  @PrimaryKey()
-  id: string = nanoid()
-
+export class Organizer extends BaseEntity {
   @OneToOne()
   user!: User
 
@@ -33,10 +31,7 @@ export class Organizer {
 }
 
 @Entity()
-export class OrganizerSocialMedia {
-  @PrimaryKey()
-  id!: number
-
+export class OrganizerSocialMedia extends BaseEntity {
   @ManyToOne()
   organizer!: Organizer
 
@@ -51,10 +46,7 @@ export class OrganizerSocialMedia {
 }
 
 @Entity()
-export class OrganizerContactPerson {
-  @PrimaryKey()
-  id!: number
-
+export class OrganizerContactPerson extends BaseEntity {
   @ManyToOne()
   organizer!: Organizer
 

@@ -1,3 +1,4 @@
+import { BaseEntity } from '@api/base/base.entity'
 import { Organizer } from '@components/auth/entities/organizer.entity'
 import {
   Collection,
@@ -16,10 +17,7 @@ import { EventQuestion } from './event-question.entity'
 import { EventScheduleItem } from './event-schedule-item.entity'
 
 @Entity()
-export class Event {
-  @PrimaryKey()
-  id: string = nanoid()
-
+export class Event extends BaseEntity {
   @ManyToOne(() => Organizer)
   organizer!: Organizer
 
@@ -61,10 +59,4 @@ export class Event {
 
   @Property({ hidden: true })
   isDeleted: boolean = false
-
-  @Property({ defaultRaw: 'now' })
-  createdAt!: Date
-
-  @Property({ onUpdate: () => new Date() })
-  updatedAt!: Date
 }

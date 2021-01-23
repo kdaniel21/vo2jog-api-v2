@@ -8,7 +8,7 @@ export default (): Router => {
   const api = new Router({ prefix })
 
   authRouter(api)
-  eventRouter(api)
+  // eventRouter(api)
 
   return api
 }

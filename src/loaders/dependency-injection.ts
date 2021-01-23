@@ -1,26 +1,25 @@
 import { container } from 'tsyringe'
 import Logger from '@logger'
-import { EntityManager } from '@mikro-orm/core'
+import { EntityRepository, MikroORM } from '@mikro-orm/core'
+import { User } from '@components/auth/entities/user.entity'
 
-export default ({
-  entityManager,
-  subscribers,
-}: {
-  entityManager: EntityManager
-  subscribers: any
-}) => {
-  console.log(entityManager)
-  // try {
-  //   container.registerInstance('prisma', )
-  //   container.registerInstance('logger', Logger)
+export default ({ orm, subscribers }: { orm: MikroORM; subscribers: any }) => {
+  try {
+    container.registerInstance('orm', orm)
+    container.registerInstance('em', orm.em)
+    container.registerInstance<EntityRepository<User>>(
+      'userRepository',
+      orm.em.getRepository(User),
+    )
 
-  //   // Register subscribers
-  //   Object.keys(subscribers).forEach(subscriberName =>
-  //     container.registerInstance(subscriberName, subscribers[subscriberName]),
-  //   )
+    container.registerInstance('logger', Logger)
 
-  //   Logger.info('Dependencies injected successfully!')
-  // } catch (err) {
-  //   Logger.error('Error while injecting dependencies %o', err)
-  // }
+    // Register subscribers
+    Object.keys(subscribers).forEach(subscriberName =>
+      container.registerInstance(subscriberName, subscribers[subscriberName]),
+    )
+    Logger.info('Dependencies injected successfully!')
+  } catch (err) {
+    Logger.error('Error while injecting dependencies %o', err)
+  }
 }

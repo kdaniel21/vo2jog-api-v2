@@ -40,6 +40,12 @@ export class EventCompetition {
 
   @OneToMany(() => EventCompetitionPriceStep, priceStep => priceStep.competition)
   competitions!: EventCompetitionPriceStep
+
+  @Property({ onUpdate: () => new Date() })
+  updatedAt: Date = new Date()
+
+  @Property()
+  createdAt: Date = new Date()
 }
 
 enum DistanceUnit {

@@ -8,12 +8,12 @@ import subscribersLoader from '@loaders/subscribers'
 
 export default async (app: Koa<Koa.DefaultState, Koa.DefaultContext>) => {
   // DB Connection
-  const entityManager = await dbLoader()
+  const orm = await dbLoader()
 
   const subscribers = subscribersLoader()
 
   // Dependency Injection
-  dependencyInjectionLoader({ entityManager, subscribers })
+  dependencyInjectionLoader({ orm, subscribers })
 
   // Koa server
   koaLoader(app)

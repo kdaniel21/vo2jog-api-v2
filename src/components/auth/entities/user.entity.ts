@@ -1,8 +1,8 @@
+import { BaseEntity } from '@api/base/base.entity'
 import {
   Collection,
   Entity,
   Enum,
-  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryKey,
@@ -13,7 +13,7 @@ import { Organizer } from './organizer.entity'
 import { RefreshToken } from './refresh-token.entity'
 
 @Entity()
-export class User {
+export class User extends BaseEntity {
   @PrimaryKey()
   id: string = nanoid()
 
@@ -50,14 +50,20 @@ export class User {
   @Property({ hidden: true })
   isDeleted: boolean = false
 
-  @Property({ defaultRaw: 'now' })
-  createdAt!: Date
+  @Property()
+  createdAt: Date = new Date()
 
   @Property({ onUpdate: () => new Date() })
-  updatedAt!: Date
+  updatedAt: Date = new Date()
+
+  constructor(email: string, password: string) {
+    super()
+    this.email = email
+    this.password = password
+  }
 }
 
-enum UserRole {
+export enum UserRole {
   USER = 'user',
   ORGANIZER = 'organizer',
 }

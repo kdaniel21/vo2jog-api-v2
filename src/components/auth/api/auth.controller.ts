@@ -3,7 +3,7 @@ import { inject, injectable } from 'tsyringe'
 import { Logger } from 'pino'
 import AuthService from '@auth/auth.service'
 import { AppError } from '@utils/app-error'
-import { User } from '@prisma/client'
+import { User } from '../entities/user.entity'
 
 @injectable()
 export default class AuthController {
@@ -20,62 +20,62 @@ export default class AuthController {
     ctx.body = { ...userCredentials }
   }
 
-  async refreshAccessToken(ctx: Context) {
-    const { refreshToken } = ctx.state.auth
-    ctx.assert(refreshToken, 400, 'No refresh token was provided.')
+  // async refreshAccessToken(ctx: Context) {
+  //   const { refreshToken } = ctx.state.auth
+  //   ctx.assert(refreshToken, 400, 'No refresh token was provided.')
 
-    this.logger.info('Generating new access token...')
+  //   this.logger.info('Generating new access token...')
 
-    const newTokens: {
-      accessToken: string
-      refreshToken: string
-    } = await this.authService.refreshTokens(refreshToken)
+  //   const newTokens: {
+  //     accessToken: string
+  //     refreshToken: string
+  //   } = await this.authService.refreshTokens(refreshToken)
 
-    ctx.body = { ...newTokens }
-  }
+  //   ctx.body = { ...newTokens }
+  // }
 
-  async retrieveUser(ctx: Context) {
-    const { user }: { user: User } = ctx.state.auth
+  // async retrieveUser(ctx: Context) {
+  //   const { user }: { user: User } = ctx.state.auth
 
-    this.logger.info('Retrieving user %s', user.email)
+  //   this.logger.info('Retrieving user %s', user.email)
 
-    ctx.body = { user }
-  }
+  //   ctx.body = { user }
+  // }
 
-  async register(ctx: Context) {
-    const { email, name, password } = ctx.request.body
-    this.logger.info('Signing up with email %s', email)
-    const userCredentials = await this.authService.register({ email, password, name })
+  // async register(ctx: Context) {
+  //   const { email, name, password } = ctx.request.body
+  //   this.logger.info('Signing up with email %s', email)
+  //   const userCredentials = await this.authService.register({ email, password, name })
 
-    ctx.body = { ...userCredentials }
-    ctx.status = 201
-  }
+  //   ctx.body = { ...userCredentials }
+  //   ctx.status = 201
+  // }
 
-  async logout(ctx: Context) {
-    const { id, refreshToken }: { id: string; refreshToken: string } = ctx.state.auth
-    this.logger.info('Signing out with user id %s', id)
+  // async logout(ctx: Context) {
+  //   const { id, refreshToken }: { id: string; refreshToken: string } = ctx.state.auth
+  //   this.logger.info('Signing out with user id %s', id)
 
-    await this.authService.logout({ userId: id, refreshToken })
-  }
+  //   await this.authService.logout({ userId: id, refreshToken })
+  // }
 
-  async forgotPassword(ctx: Context) {
-    const { email }: { email: string } = ctx.request.body
-    this.logger.info('Resetting password for email address %s', email)
+  // async forgotPassword(ctx: Context) {
+  //   const { email }: { email: string } = ctx.request.body
+  //   this.logger.info('Resetting password for email address %s', email)
 
-    await this.authService.createPasswordResetToken(email)
+  //   await this.authService.createPasswordResetToken(email)
 
-    ctx.body = { message: 'Password reset email was successfully sent!' }
-  }
+  //   ctx.body = { message: 'Password reset email was successfully sent!' }
+  // }
 
-  async resetPassword(ctx: Context) {
-    // Get token from body if necessary
-    if (ctx.request.body.token) ctx.params = ctx.request.body.token
+  // async resetPassword(ctx: Context) {
+  //   // Get token from body if necessary
+  //   if (ctx.request.body.token) ctx.params = ctx.request.body.token
 
-    const { password }: { password: string } = ctx.request.body
-    const { token }: { token: string } = ctx.params
+  //   const { password }: { password: string } = ctx.request.body
+  //   const { token }: { token: string } = ctx.params
 
-    await this.authService.resetPasswordUsingToken({ token, newPassword: password })
+  //   await this.authService.resetPasswordUsingToken({ token, newPassword: password })
 
-    ctx.body = { message: 'Password updated successfully!' }
-  }
+  //   ctx.body = { message: 'Password updated successfully!' }
+  // }
 }

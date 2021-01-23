@@ -6,6 +6,7 @@ import helmet from 'koa-helmet'
 import { loggerMiddleware } from '@logger'
 import router from '@api/router'
 import errorHandler from '@api/middleware/error-handler'
+import mikroOrm from '@api/middleware/mikro-orm'
 
 export default (app: Koa<Koa.DefaultState, Koa.DefaultContext>) => {
   app
@@ -15,7 +16,8 @@ export default (app: Koa<Koa.DefaultState, Koa.DefaultContext>) => {
     .use(cors())
     .use(loggerMiddleware)
     .use(errorHandler)
-  // Load routes
-  // .use(router().routes())
-  // .use(router().allowedMethods())
+    .use(mikroOrm)
+    // Load routes
+    .use(router().routes())
+    .use(router().allowedMethods())
 }
