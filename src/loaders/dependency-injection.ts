@@ -2,6 +2,7 @@ import { container } from 'tsyringe'
 import Logger from '@logger'
 import { EntityRepository, MikroORM } from '@mikro-orm/core'
 import { User } from '@components/auth/entities/user.entity'
+import { RefreshToken } from '@components/auth/entities/refresh-token.entity'
 
 export default ({ orm, subscribers }: { orm: MikroORM; subscribers: any }) => {
   try {
@@ -10,6 +11,10 @@ export default ({ orm, subscribers }: { orm: MikroORM; subscribers: any }) => {
     container.registerInstance<EntityRepository<User>>(
       'userRepository',
       orm.em.getRepository(User),
+    )
+    container.registerInstance<EntityRepository<RefreshToken>>(
+      'refreshTokenRepository',
+      orm.em.getRepository(RefreshToken),
     )
 
     container.registerInstance('logger', Logger)

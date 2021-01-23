@@ -6,15 +6,14 @@ import includeTokens from '@auth/api/middleware/include-tokens'
 import { container } from 'tsyringe'
 import { Logger } from 'pino'
 
-// const logger: Logger = container.resolve('logger')
-const logger: any = {}
-
 export const validateJwt = async (ctx: Context, next: Next) => {
   try {
+    const logger: Logger = container.resolve('logger')
+
     const { accessToken } = ctx.state.auth
     if (!accessToken) throw new Error()
 
-    logger.info('Decoding access token %s', accessToken)
+    logger.info('Decoding access token')
     const decoded = jwt.verify(accessToken, config.auth.jwtSecret)
 
     const { user } = decoded as any
@@ -23,10 +22,11 @@ export const validateJwt = async (ctx: Context, next: Next) => {
       ...ctx.state.auth,
       user,
     }
-    await next()
   } catch {
-    ctx.throw(401, 'Invalid or expired access token.')
+    return ctx.throw(401, 'Invalid or expired access token.')
   }
+
+  await next()
 }
 
 export default compose([includeTokens, validateJwt])

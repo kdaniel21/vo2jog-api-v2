@@ -30,35 +30,35 @@ export default (api: Router) => {
       passwordConfirm: Joi.string().required().equal(Joi.ref('password')),
     },
   })
-  // router.post('/register', registerValidator, ctx => authController.register(ctx))
+  router.post('/register', registerValidator, ctx => authController.register(ctx))
 
-  // // POST /refresh
-  // router.post('/refresh', includeTokens, ctx => authController.refreshAccessToken(ctx))
+  // POST /refresh
+  router.post('/refresh', includeTokens, ctx => authController.refreshAccessToken(ctx))
 
-  // // GET /user
-  // router.get('/user', fetchUser, ctx => authController.retrieveUser(ctx))
+  // GET /user
+  router.get('/user', fetchUser, ctx => authController.retrieveUser(ctx))
 
-  // // POST /logout
-  // router.post('/logout', validateJwt, ctx => authController.logout(ctx))
+  // POST /logout
+  router.post('/logout', validateJwt, ctx => authController.logout(ctx))
 
-  // // POST /forgot-password
-  // const forgotPasswordValidator = validate({
-  //   body: { email: Joi.string().email().required() },
-  // })
-  // router.post('/forgot-password', forgotPasswordValidator, ctx =>
-  //   authController.forgotPassword(ctx),
-  // )
+  // POST /forgot-password
+  const forgotPasswordValidator = validate({
+    body: { email: Joi.string().email().required() },
+  })
+  router.post('/forgot-password', forgotPasswordValidator, ctx =>
+    authController.forgotPassword(ctx),
+  )
 
-  // // POST/reset-password/:token
-  // const resetPasswordValidator = validate({
-  //   body: {
-  //     password: Joi.string().min(8).required(),
-  //     passwordConfirm: Joi.string().required().equal(Joi.ref('password')),
-  //   },
-  // })
-  // router.post('/reset-password/:token', resetPasswordValidator, ctx =>
-  //   authController.resetPassword(ctx),
-  // )
+  // POST/reset-password/:token
+  const resetPasswordValidator = validate({
+    body: {
+      password: Joi.string().min(8).required(),
+      passwordConfirm: Joi.string().required().equal(Joi.ref('password')),
+    },
+  })
+  router.post('/reset-password/:token', resetPasswordValidator, ctx =>
+    authController.resetPassword(ctx),
+  )
 
   api.use('/auth', router.routes(), router.allowedMethods())
 }

@@ -13,11 +13,14 @@ import { EntityRepository } from '@mikro-orm/core'
 import { User, UserRole } from './entities/user.entity'
 import { IUserCredentialsDto } from './dtos/user-credentials.dto'
 import { RefreshToken } from './entities/refresh-token.entity'
+import { IUserRegisterDto } from './dtos/user-register.dto'
 
 @injectable()
 export default class AuthService {
   constructor(
     @inject('userRepository') private userRepository: EntityRepository<User>,
+    @inject('refreshTokenRepository')
+    private refreshTokenRepository: EntityRepository<RefreshToken>,
     @inject('logger') private logger: Logger,
     @inject('authSubscriber') private authSubscriber: EventEmitter,
     @inject(MailerService) private mailerService: MailerService,
@@ -45,115 +48,121 @@ export default class AuthService {
     return { user, accessToken, refreshToken }
   }
 
-  // public async register(
-  //   userData: IUserRegisterDto,
-  // ): Promise<{ user: User; refreshToken: string; accessToken: string }> {
-  //   const { name, email, password } = userData
+  public async register(
+    userData: IUserRegisterDto,
+  ): Promise<{ user: User; refreshToken: string; accessToken: string }> {
+    const { name, email, password } = userData
 
-  //   this.logger.info('Checking email address availability for %s', email)
-  //   const isEmailRegistered = await this.prisma.user.count({ where: { email } })
-  //   if (isEmailRegistered) throw new AppError('Email address already registered.', 403)
+    this.logger.info('Checking email address availability for %s', email)
+    const isEmailRegistered = await this.userRepository.count({ email })
+    if (isEmailRegistered) throw new AppError('Email address already registered.', 403)
 
-  //   const user = await this.prisma.user.create({
-  //     data: { name, email, password },
-  //   })
+    const user = new User(email, password, name)
+    await this.userRepository.persistAndFlush(user)
 
-  //   const accessToken = this.generateJWT(user)
-  //   const refreshToken = await this.generateNewRefreshToken(user)
+    const accessToken = this.generateJWT(user)
+    const refreshToken = await this.generateNewRefreshToken(user)
 
-  //   this.authSubscriber.emit(authEvents.register)
+    this.authSubscriber.emit(authEvents.register)
 
-  //   return { user, accessToken, refreshToken }
-  // }
+    return { user, accessToken, refreshToken }
+  }
 
-  // public async refreshTokens(
-  //   refreshToken: string,
-  // ): Promise<{ accessToken: string; refreshToken: string }> {
-  //   const refreshTokenRecord = await this.getValidRefreshToken(refreshToken)
-  //   if (!refreshTokenRecord) throw new AppError('Invalid refresh token.', 401)
+  public async refreshTokens(
+    refreshToken: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const refreshTokenRecord = await this.getValidRefreshToken(refreshToken)
+    if (!refreshTokenRecord) throw new AppError('Invalid refresh token.', 401)
 
-  //   // Replace refresh token
-  //   const { id, user } = refreshTokenRecord
-  //   const newRefreshToken = await this.replaceExistingRefreshToken(id)
-  //   const { email, role } = user
-  //   const newAccessToken = this.generateJWT({ id: user.id, email, role })
+    // Replace refresh token
+    const newRefreshToken = await this.replaceExistingRefreshToken(refreshTokenRecord)
+    const { id, email, role } = refreshTokenRecord.user
+    const newAccessToken = this.generateJWT({ id, email, role })
 
-  //   return { accessToken: newAccessToken, refreshToken: newRefreshToken }
-  // }
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken }
+  }
 
-  // public logout({ userId, refreshToken }: { userId: string; refreshToken: string }) {
-  //   const hashedToken = this.hashToken(refreshToken)
-  //   return this.prisma.refreshToken.deleteMany({
-  //     where: { token: hashedToken, userId },
-  //   })
-  // }
+  public async logout({
+    userId,
+    refreshToken,
+  }: {
+    userId: string
+    refreshToken: string
+  }): Promise<void> {
+    const hashedToken = this.hashToken(refreshToken)
+    const count = await this.refreshTokenRepository.nativeDelete({
+      token: hashedToken,
+      user: userId,
+    })
+    if (count === 0) throw new AppError('Invalid refresh token.', 401)
+  }
 
-  // public async createPasswordResetToken(email: string): Promise<void> {
-  //   this.logger.info('Attempting creating password reset token for email %s', email)
-  //   const { token, hashedToken } = this.generateHashedTokenPair()
-  //   const expiresAt = addSeconds(new Date(), config.auth.passwordResetLifetime)
+  public async createPasswordResetToken(email: string): Promise<void> {
+    this.logger.info('Attempting creating password reset token for email %s', email)
+    const { token, hashedToken } = this.generateHashedTokenPair()
+    console.log(token)
+    const expiresAt = addSeconds(new Date(), config.auth.passwordResetLifetime)
 
-  //   const updated = await this.prisma.user.updateMany({
-  //     where: { email },
-  //     data: { passwordResetToken: hashedToken, passwordResetTokenExpiresAt: expiresAt },
-  //   })
-  //   if (updated && !updated.count) throw new AppError('Email address does not exist', 400)
+    const count = await this.userRepository.nativeUpdate(
+      { email },
+      { passwordResetToken: hashedToken, passwordResetTokenExpiresAt: expiresAt },
+    )
+    if (!count) throw new AppError('Email address does not exist', 400)
 
-  //   // TODO: Send Email
-  // }
+    // TODO: Send Email
+  }
 
-  // public async resetPasswordUsingToken({
-  //   token,
-  //   newPassword,
-  // }: {
-  //   token: string
-  //   newPassword: string
-  // }): Promise<void> {
-  //   try {
-  //     if (!token) throw new Error()
+  public async resetPasswordUsingToken({
+    token,
+    newPassword,
+  }: {
+    token: string
+    newPassword: string
+  }): Promise<void> {
+    try {
+      if (!token) throw new Error()
 
-  //     this.logger.info('Attempting to reset password with using token %s', token)
+      this.logger.info('Attempting to reset password')
 
-  //     const updated = await this.prisma.user.updateMany({
-  //       where: {
-  //         passwordResetToken: token,
-  //         passwordResetTokenExpiresAt: { gte: new Date() },
-  //       },
-  //       data: {
-  //         password: newPassword,
-  //         passwordResetToken: null,
-  //         passwordResetTokenExpiresAt: null,
-  //       },
-  //     })
-  //     if (updated && !updated.count) throw new Error()
-  //   } catch {
-  //     throw new AppError('Invalid or expired token.', 401)
-  //   }
-  // }
+      const hashedToken = this.hashToken(token)
+      const count = await this.userRepository.nativeUpdate(
+        {
+          passwordResetToken: hashedToken,
+          passwordResetTokenExpiresAt: { $gte: new Date() },
+        },
+        {
+          password: newPassword,
+          passwordResetToken: null,
+          passwordResetTokenExpiresAt: null,
+        },
+      )
+      if (!count) throw new Error()
+    } catch {
+      throw new AppError('Invalid or expired token.', 401)
+    }
+  }
 
-  // /**
-  //  *
-  //  * @param refreshToken: valid refresh token
-  //  * @returns refreshToken w/ the necessary user fields to create a new JWT
-  //  */
-  // private getValidRefreshToken(refreshToken: string) {
-  //   const hashedRefreshToken = this.hashToken(refreshToken)
-  //   return this.prisma.refreshToken.findFirst({
-  //     where: { token: hashedRefreshToken, expiresAt: { gte: new Date() } },
-  //     include: { user: { select: { id: true, email: true, role: true } } },
-  //   })
-  // }
+  /**
+   *
+   * @param refreshToken: valid refresh token
+   * @returns refreshToken w/ the necessary user fields to create a new JWT
+   */
+  private async getValidRefreshToken(refreshToken: string): Promise<RefreshToken | null> {
+    const hashedRefreshToken = this.hashToken(refreshToken)
+    return this.refreshTokenRepository.findOne(
+      { token: hashedRefreshToken, expiresAt: { $gte: new Date() } },
+      ['user'],
+    )
+  }
 
-  // private async replaceExistingRefreshToken(refreshTokenId: number): Promise<string> {
-  //   const { token, hashedToken } = this.generateHashedTokenPair()
+  private async replaceExistingRefreshToken(refreshToken: RefreshToken): Promise<string> {
+    const { token, hashedToken } = this.generateHashedTokenPair()
 
-  //   await this.prisma.refreshToken.update({
-  //     where: { id: refreshTokenId },
-  //     data: { token: hashedToken },
-  //   })
+    refreshToken.token = hashedToken
+    await this.refreshTokenRepository.persistAndFlush(refreshToken)
 
-  //   return token
-  // }
+    return token
+  }
 
   private async generateNewRefreshToken(user: User): Promise<string> {
     this.logger.info('Generating refresh token for user %s', user.email)
@@ -163,18 +172,7 @@ export default class AuthService {
 
     const refreshToken = new RefreshToken(hashedToken, expiresAt, user)
     user.refreshTokens.add(refreshToken)
-
     await this.userRepository.persistAndFlush(user)
-
-    // await this..create({
-    //   data: {
-    //     token: hashedToken,
-    //     expiresAt,
-    //     user: {
-    //       connect: { id },
-    //     },
-    //   },
-    // })
 
     return token
   }
@@ -189,7 +187,7 @@ export default class AuthService {
     role: UserRole
   }): string {
     this.logger.info('Generating JWT token for user %s', email)
-    return jwt.sign({ user: { id, role } }, config.auth.jwtSecret, {
+    return jwt.sign({ user: { id, email, role } }, config.auth.jwtSecret, {
       expiresIn: config.auth.jwtLifetime,
     })
   }
