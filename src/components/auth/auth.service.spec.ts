@@ -46,7 +46,7 @@ describe.only('Auth Service', () => {
   // Services
   let authService: AuthService
 
-  // HOOKSK
+  // HOOKS
   beforeAll(async () => {
     // Initialize MikroORM so that entities can be used
     await dbLoader()
