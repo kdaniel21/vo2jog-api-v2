@@ -2,12 +2,14 @@ import supertest from 'supertest'
 import Koa from 'koa'
 import faker from 'faker'
 import { container } from 'tsyringe'
-import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
 import loader from '@loaders'
 import config from '@config'
+import { User } from '../entities/user.entity'
+import { EntityRepository } from '@mikro-orm/core'
+import { RefreshToken } from '../entities/refresh-token.entity'
 
 describe('/auth endpoint', () => {
   const BASE_ENDPOINT = '/api/v2/auth'
@@ -16,23 +18,27 @@ describe('/auth endpoint', () => {
   loader(app)
   const request = supertest(app.callback())
 
-  const prismaClient: PrismaClient = container.resolve('prisma')
+  const userRepository: EntityRepository<User> = container.resolve('userRepository')
+  const refreshTokenRepository: EntityRepository<RefreshToken> = container.resolve(
+    'refreshTokenRepository',
+  )
 
-  const fakeUser = {
-    name: faker.name.findName(),
-    email: faker.internet.email(),
-    password: faker.internet.password(),
-  }
-  let userId: string
+  let fakeUser: User
 
   beforeAll(async () => {
     // Fake existing user
-    const user = await prismaClient.user.create({ data: { ...fakeUser } })
-    userId = user.id
+    const user = new User(
+      faker.name.findName(),
+      faker.internet.email(),
+      faker.internet.password(),
+    )
+    await userRepository.persistAndFlush(fakeUser)
+
+    fakeUser = user
   })
 
   afterAll(async () => {
-    await prismaClient.user.delete({ where: { id: userId } })
+    await userRepository.removeAndFlush(fakeUser)
   })
 
   describe('POST /login', () => {
@@ -78,7 +84,7 @@ describe('/auth endpoint', () => {
       const res = await request.post(registerEndpoint).send(newUser)
 
       const { email } = newUser
-      const newUserRecord = await prismaClient.user.findUnique({ where: { email } })
+      const newUserRecord = await userRepository.findOne({ email })
 
       expect(res.status).toBe(201)
       expect(res.body).toContainKeys(['accessToken', 'user', 'refreshToken'])
@@ -108,16 +114,17 @@ describe('/auth endpoint', () => {
 
     it('should send new access and refresh tokens', async () => {
       const validRefreshToken = faker.random.uuid()
-      const refreshTokenRecord = {
-        token: crypto
-          .createHash('sha256')
-          .update(validRefreshToken)
-          .digest('hex')
-          .toString(),
-        expiresAt: faker.date.future(),
-        user: { connect: { email: fakeUser.email } },
-      }
-      const { id } = await prismaClient.refreshToken.create({ data: refreshTokenRecord })
+      const hashedToken = crypto
+        .createHash('sha256')
+        .update(validRefreshToken)
+        .digest('hex')
+        .toString()
+      const refreshTokenRecord = new RefreshToken(
+        hashedToken,
+        faker.date.future(),
+        fakeUser,
+      )
+      await refreshTokenRepository.persistAndFlush(refreshTokenRecord)
 
       const res = await request
         .post(refreshEndpoint)
@@ -128,7 +135,7 @@ describe('/auth endpoint', () => {
       expect(res.body.refreshToken).not.toBe(validRefreshToken)
 
       // Cleanup
-      await prismaClient.refreshToken.delete({ where: { id } })
+      await refreshTokenRepository.removeAndFlush(refreshTokenRecord)
     })
 
     it('should send an error when using invalid refresh token', async () => {
@@ -147,14 +154,14 @@ describe('/auth endpoint', () => {
     const userEndpoint = `${BASE_ENDPOINT}/user`
 
     it('should return the validated user', async () => {
-      const accessToken = jwt.sign({ user: { id: userId } }, config.auth.jwtSecret)
+      const accessToken = jwt.sign({ user: { id: fakeUser.id } }, config.auth.jwtSecret)
 
       const res = await request
         .get(userEndpoint)
         .set('Authorization', `Bearer ${accessToken}`)
 
       expect(res.status).toBe(200)
-      expect(res.body.user.id).toEqual(userId)
+      expect(res.body.user.id).toEqual(fakeUser.id)
       expect(res.body.user.email).toEqual(fakeUser.email)
     })
 
@@ -176,18 +183,18 @@ describe('/auth endpoint', () => {
 
     it('should logout user', async () => {
       // Fake existing token
-      const fakeRefreshToken = {
-        token: faker.random.uuid(),
-        expiresAt: faker.date.future(),
-        user: { connect: { email: fakeUser.email } },
-      }
-      await prismaClient.refreshToken.create({ data: fakeRefreshToken })
+      const fakeRefreshToken = new RefreshToken(
+        faker.random.uuid(),
+        faker.date.future(),
+        fakeUser,
+      )
+      await refreshTokenRepository.persistAndFlush(fakeRefreshToken)
 
       const res = await request.post(logoutEndpoint).send()
 
       expect(res.status).toBe(204)
 
-      await prismaClient.refreshToken.delete({ where: { token: fakeRefreshToken.token } })
+      await refreshTokenRepository.removeAndFlush(fakeRefreshToken)
     })
   })
 
@@ -198,7 +205,7 @@ describe('/auth endpoint', () => {
       const { email } = fakeUser
       const res = await request.post(forgotPasswordEndpoint).send({ email })
 
-      const userRecord = await prismaClient.user.findUnique({ where: { email } })
+      const userRecord = await userRepository.findOne({ email })
 
       expect(res.status).toBe(200)
       expect(res.body).not.toHaveProperty('token')
@@ -231,17 +238,14 @@ describe('/auth endpoint', () => {
         passwordResetTokenExpiresAt: faker.date.future(),
       }
       const { email } = fakeUser
-      await prismaClient.user.update({
-        where: { email },
-        data: { ...validToken },
-      })
+      await userRepository.nativeUpdate({ email }, { ...validToken })
 
       const password = faker.internet.password()
       const res = await request
         .post(`${resetPasswordEndpoint}/${validToken.passwordResetToken}`)
         .send({ password, passwordConfirm: password })
 
-      const updatedUserRecord = await prismaClient.user.findUnique({ where: { email } })
+      const updatedUserRecord = await userRepository.findOne({ email })
       const isPasswordChanged = await bcrypt.compare(password, updatedUserRecord!.password)
 
       expect(res.status).toBe(200)
