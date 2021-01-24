@@ -1,30 +1,32 @@
 import { container } from 'tsyringe'
-import Logger from '@logger'
+import logger from '@logger'
 import { EntityRepository, MikroORM } from '@mikro-orm/core'
 import { User } from '@components/auth/entities/user.entity'
 import { RefreshToken } from '@components/auth/entities/refresh-token.entity'
+import { Logger } from 'pino-multi-stream'
 
 export default ({ orm, subscribers }: { orm: MikroORM; subscribers: any }) => {
   try {
     container.registerInstance('orm', orm)
-    container.registerInstance('em', orm.em)
-    container.registerInstance<EntityRepository<User>>(
-      'userRepository',
-      orm.em.getRepository(User),
-    )
-    container.registerInstance<EntityRepository<RefreshToken>>(
-      'refreshTokenRepository',
-      orm.em.getRepository(RefreshToken),
-    )
+    container.register('em', { useValue: orm.em.fork() })
 
-    container.registerInstance('logger', Logger)
+    const injectedEntities: any[] = [User, RefreshToken]
+    injectedEntities.forEach(entity => {
+      const token = `${entity.name}Repository`
+      const repository: EntityRepository<typeof entity> = orm.em.getRepository(entity)
+      console.log(token)
+
+      container.register<EntityRepository<typeof entity>>(token, { useValue: repository })
+    })
+
+    container.registerInstance<Logger>('logger', logger)
 
     // Register subscribers
     Object.keys(subscribers).forEach(subscriberName =>
       container.registerInstance(subscriberName, subscribers[subscriberName]),
     )
-    Logger.info('Dependencies injected successfully!')
+    logger.info('Dependencies injected successfully!')
   } catch (err) {
-    Logger.error('Error while injecting dependencies %o', err)
+    logger.error('Error while injecting dependencies %o', err)
   }
 }
