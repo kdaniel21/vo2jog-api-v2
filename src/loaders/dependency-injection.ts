@@ -8,7 +8,7 @@ import { Logger } from 'pino-multi-stream'
 export default ({ orm, subscribers }: { orm: MikroORM; subscribers: any }) => {
   try {
     container.registerInstance('orm', orm)
-    container.register('em', { useValue: orm.em.fork() })
+    container.registerInstance('em', orm.em)
 
     const injectedEntities: any[] = [User, RefreshToken]
     injectedEntities.forEach(entity => {
