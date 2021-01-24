@@ -1,6 +1,6 @@
 import { container } from 'tsyringe'
 import logger from '@logger'
-import { EntityRepository, MikroORM } from '@mikro-orm/core'
+import { MikroORM } from '@mikro-orm/core'
 import { User } from '@components/auth/entities/user.entity'
 import { RefreshToken } from '@components/auth/entities/refresh-token.entity'
 import { Logger } from 'pino-multi-stream'
@@ -10,12 +10,12 @@ export default ({ orm, subscribers }: { orm: MikroORM; subscribers: any }) => {
     container.registerInstance('orm', orm)
     container.registerInstance('em', orm.em)
 
-    const injectedEntities: any[] = [User, RefreshToken]
+    const injectedEntities = [User, RefreshToken]
     injectedEntities.forEach(entity => {
       const token = `${entity.name}Repository`
-      const repository: EntityRepository<typeof entity> = orm.em.getRepository(entity)
+      const repository = orm.em.getRepository<typeof entity>(entity.name)
 
-      container.register<EntityRepository<typeof entity>>(token, { useValue: repository })
+      container.register(token, { useValue: repository })
     })
 
     container.registerInstance<Logger>('logger', logger)
