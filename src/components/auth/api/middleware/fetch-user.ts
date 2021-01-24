@@ -9,7 +9,7 @@ import { EntityRepository } from '@mikro-orm/core'
 export const fetchUser = async (ctx: Context, next: Next) => {
   try {
     const logger: Logger = container.resolve('logger')
-    const userRepository: EntityRepository<User> = container.resolve('userRepository')
+    const userRepository: EntityRepository<User> = container.resolve('UserRepository')
 
     const { id }: { id: string } = ctx.state.auth.user
     logger.info('Fetching user with id %s', id)

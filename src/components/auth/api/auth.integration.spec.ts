@@ -31,8 +31,8 @@ describe('/auth endpoint', () => {
 
     // Load repositories
     em = container.resolve('em')
-    userRepository = container.resolve('userRepository')
-    refreshTokenRepository = container.resolve('refreshTokenRepository')
+    userRepository = container.resolve('UserRepository')
+    refreshTokenRepository = container.resolve('RefreshTokenRepository')
 
     // Fake existing user
     fakeUser = new User(faker.internet.email(), fakeUserPassword, faker.name.findName())
