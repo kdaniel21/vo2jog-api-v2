@@ -213,10 +213,7 @@ describe('/auth endpoint', () => {
       // Make sure that it is queried from the DB and not from cache
       // Because the underlying service uses nativeUpdate
       em.clear()
-      const userRecord = await userRepository.findOne({ email }, [
-        'passwordResetToken',
-        'passwordResetTokenExpiresAt',
-      ])
+      const userRecord = await userRepository.findOne({ email })
 
       expect(res.status).toBe(200)
       expect(res.body).not.toHaveProperty('token')
