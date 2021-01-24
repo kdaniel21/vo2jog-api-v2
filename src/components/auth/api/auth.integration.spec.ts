@@ -20,6 +20,7 @@ describe('/auth endpoint', () => {
   let userRepository: EntityRepository<User>
   let refreshTokenRepository: EntityRepository<RefreshToken>
 
+  const fakeUserPassword = faker.internet.password()
   let fakeUser: User
 
   beforeAll(async () => {
@@ -32,26 +33,22 @@ describe('/auth endpoint', () => {
     refreshTokenRepository = container.resolve('refreshTokenRepository')
 
     // Fake existing user
-    const user = new User(
-      faker.name.findName(),
-      faker.internet.email(),
-      faker.internet.password(),
-    )
+    fakeUser = new User(faker.internet.email(), fakeUserPassword, faker.name.findName())
     await userRepository.persistAndFlush(fakeUser)
-
-    fakeUser = user
   })
 
   afterAll(async () => {
     await userRepository.removeAndFlush(fakeUser)
   })
 
-  describe('POST /login', () => {
+  describe.only('POST /login', () => {
     const loginEndpoint = `${BASE_ENDPOINT}/login`
 
-    it('should login users with the correct credentials', async () => {
-      const { email, password } = fakeUser
-      const res = await request.post(loginEndpoint).send({ email, password })
+    it.only('should login users with the correct credentials', async () => {
+      const { email } = fakeUser
+      const res = await request
+        .post(loginEndpoint)
+        .send({ email, password: fakeUserPassword })
 
       expect(res.status).toBe(200)
       expect(res.body).toContainKeys(['accessToken', 'refreshToken', 'user'])
