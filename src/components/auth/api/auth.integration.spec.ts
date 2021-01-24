@@ -15,17 +15,22 @@ describe('/auth endpoint', () => {
   const BASE_ENDPOINT = '/api/v2/auth'
 
   const app = new Koa()
-  loader(app)
-  const request = supertest(app.callback())
+  let request: supertest.SuperTest<supertest.Test>
 
-  const userRepository: EntityRepository<User> = container.resolve('userRepository')
-  const refreshTokenRepository: EntityRepository<RefreshToken> = container.resolve(
-    'refreshTokenRepository',
-  )
+  let userRepository: EntityRepository<User>
+  let refreshTokenRepository: EntityRepository<RefreshToken>
 
   let fakeUser: User
 
   beforeAll(async () => {
+    // Load app
+    await loader(app)
+    request = supertest(app.callback())
+
+    // Load repositories
+    userRepository = container.resolve('userRepository')
+    refreshTokenRepository = container.resolve('refreshTokenRepository')
+
     // Fake existing user
     const user = new User(
       faker.name.findName(),
