@@ -241,8 +241,10 @@ describe('/auth endpoint', () => {
 
     it('should change password using valid token', async () => {
       // Mock existing token
+      const token = faker.random.uuid()
+      const hashedToken = crypto.createHash('sha256').update(token).digest('hex').toString()
       const validToken = {
-        passwordResetToken: faker.random.uuid(),
+        passwordResetToken: hashedToken,
         passwordResetTokenExpiresAt: faker.date.future(),
       }
       const { email } = fakeUser
@@ -250,9 +252,10 @@ describe('/auth endpoint', () => {
 
       const password = faker.internet.password()
       const res = await request
-        .post(`${resetPasswordEndpoint}/${validToken.passwordResetToken}`)
+        .post(`${resetPasswordEndpoint}/${token}`)
         .send({ password, passwordConfirm: password })
 
+      em.clear()
       const updatedUserRecord = await userRepository.findOne({ email })
       const isPasswordChanged = await bcrypt.compare(password, updatedUserRecord!.password)
 
