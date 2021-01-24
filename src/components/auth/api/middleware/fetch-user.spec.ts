@@ -1,14 +1,15 @@
 import { fetchUser } from '@auth/api/middleware/fetch-user'
-import { PrismaClient, User } from '@prisma/client'
+import { User } from '@components/auth/entities/user.entity'
 import faker from 'faker'
 import { mocked } from 'ts-jest/utils'
 import { container } from 'tsyringe'
 jest.mock('tsyringe')
 
 describe('Fetch user middleware', () => {
-  const prismaClient = new PrismaClient()
-  const findUnique = (prismaClient.user.findUnique = jest.fn())
-  mocked(container).resolve.mockReturnValue(prismaClient)
+  const userRepository = {
+    findOneOrFail: jest.fn(),
+  }
+  mocked(container).resolve.mockReturnValue(userRepository)
 
   const fakeUser: Partial<User> = {
     id: faker.random.uuid(),
@@ -27,7 +28,7 @@ describe('Fetch user middleware', () => {
   it('should fetch the complete user object from the DB', async () => {
     const { id, role } = fakeUser
     mockContext.state.auth.user = { id, role }
-    findUnique.mockResolvedValueOnce(fakeUser as User)
+    userRepository.findOneOrFail.mockResolvedValueOnce(fakeUser as User)
 
     await fetchUser(mockContext as any, nextFunction)
 
@@ -37,7 +38,10 @@ describe('Fetch user middleware', () => {
 
   it('should throw an error when user does not exist', async () => {
     mockContext.state.auth.user = { id: faker.random.number(), role: faker.random.word() }
-    findUnique.mockReturnValueOnce(null as any)
+    // findUnique.mockReturnValueOnce(null as any)
+    userRepository.findOneOrFail.mockImplementationOnce(() => {
+      throw new Error()
+    })
 
     await fetchUser(mockContext as any, nextFunction)
 
