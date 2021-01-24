@@ -8,7 +8,7 @@ import jwt from 'jsonwebtoken'
 import loader from '@loaders'
 import config from '@config'
 import { User } from '../entities/user.entity'
-import { EntityRepository } from '@mikro-orm/core'
+import { EntityManager, EntityRepository } from '@mikro-orm/core'
 import { RefreshToken } from '../entities/refresh-token.entity'
 
 describe('/auth endpoint', () => {
@@ -16,6 +16,7 @@ describe('/auth endpoint', () => {
 
   const app = new Koa()
   let request: supertest.SuperTest<supertest.Test>
+  let em: EntityManager
 
   let userRepository: EntityRepository<User>
   let refreshTokenRepository: EntityRepository<RefreshToken>
@@ -29,6 +30,7 @@ describe('/auth endpoint', () => {
     request = supertest(app.callback())
 
     // Load repositories
+    em = container.resolve('em')
     userRepository = container.resolve('userRepository')
     refreshTokenRepository = container.resolve('refreshTokenRepository')
 
@@ -39,12 +41,13 @@ describe('/auth endpoint', () => {
 
   afterAll(async () => {
     await userRepository.removeAndFlush(fakeUser)
+    console.log('deleted user')
   })
 
-  describe.only('POST /login', () => {
+  describe('POST /login', () => {
     const loginEndpoint = `${BASE_ENDPOINT}/login`
 
-    it.only('should login users with the correct credentials', async () => {
+    it('should login users with the correct credentials', async () => {
       const { email } = fakeUser
       const res = await request
         .post(loginEndpoint)
@@ -207,7 +210,13 @@ describe('/auth endpoint', () => {
       const { email } = fakeUser
       const res = await request.post(forgotPasswordEndpoint).send({ email })
 
-      const userRecord = await userRepository.findOne({ email })
+      // Make sure that it is queried from the DB and not from cache
+      // Because the underlying service uses nativeUpdate
+      em.clear()
+      const userRecord = await userRepository.findOne({ email }, [
+        'passwordResetToken',
+        'passwordResetTokenExpiresAt',
+      ])
 
       expect(res.status).toBe(200)
       expect(res.body).not.toHaveProperty('token')
