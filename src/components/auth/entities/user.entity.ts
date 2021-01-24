@@ -36,25 +36,25 @@ export class User extends BaseEntity {
   @Property()
   name?: string
 
-  @Property({ hidden: true })
+  @Property({ lazy: true })
   password!: string
 
   @Enum()
   role: UserRole = UserRole.USER
 
-  @OneToMany(() => RefreshToken, refreshToken => refreshToken.user, { hidden: true })
+  @OneToMany(() => RefreshToken, refreshToken => refreshToken.user, { lazy: true })
   refreshTokens = new Collection<RefreshToken>(this)
 
-  @Property({ hidden: true })
+  @Property({ lazy: true })
   passwordResetToken?: string
 
-  @Property({ hidden: true })
+  @Property({ lazy: true })
   passwordResetTokenExpiresAt?: Date
 
   @OneToOne(() => Organizer, organizer => organizer.user)
   profile!: Organizer
 
-  @Property({ hidden: true })
+  @Property({ lazy: true })
   isDeleted: boolean = false
 
   @Property()
