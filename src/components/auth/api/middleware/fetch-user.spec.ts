@@ -9,7 +9,13 @@ describe('Fetch user middleware', () => {
   const userRepository = {
     findOneOrFail: jest.fn(),
   }
-  mocked(container).resolve.mockReturnValue(userRepository)
+  const loggerMock = {
+    info: jest.fn(),
+  }
+
+  mocked(container).resolve.mockImplementation(key =>
+    key === 'logger' ? loggerMock : userRepository,
+  )
 
   const fakeUser: Partial<User> = {
     id: faker.random.uuid(),
@@ -34,6 +40,7 @@ describe('Fetch user middleware', () => {
 
     expect(mockContext.state.auth.user).toMatchObject(fakeUser)
     expect(nextFunction).toBeCalledTimes(1)
+    expect(mockContext.throw).not.toBeCalled()
   })
 
   it('should throw an error when user does not exist', async () => {
