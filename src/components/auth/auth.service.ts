@@ -17,8 +17,8 @@ import { IUserRegisterDto } from './dtos/user-register.dto'
 @injectable()
 export default class AuthService {
   constructor(
-    @inject('userRepository') private userRepository: EntityRepository<User>,
-    @inject('refreshTokenRepository')
+    @inject('UserRepository') private userRepository: EntityRepository<User>,
+    @inject('RefreshTokenRepository')
     private refreshTokenRepository: EntityRepository<RefreshToken>,
     @inject('logger') private logger: Logger,
     @inject('authSubscriber') private authSubscriber: EventEmitter,
