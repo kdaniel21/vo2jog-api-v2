@@ -69,6 +69,10 @@ export class User extends BaseEntity {
     this.password = password
     this.name = name
   }
+
+  public isPasswordCorrect(password: string): Promise<boolean> {
+    return bcrypt.compare(password, this.password)
+  }
 }
 
 export enum UserRole {

@@ -1,5 +1,4 @@
 import crypto from 'crypto'
-import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { addSeconds } from 'date-fns'
 import EventEmitter from 'eventemitter3'
@@ -37,7 +36,7 @@ export default class AuthService {
     if (!user) throw new AppError('Invalid email or password.', 401)
 
     this.logger.info('Checking password for user %s', email)
-    const isPasswordCorrect = await bcrypt.compare(password, user.password)
+    const isPasswordCorrect = await user.isPasswordCorrect(password)
     if (!isPasswordCorrect) throw new AppError('Invalid email or password', 401)
 
     const accessToken = this.generateJWT(user)

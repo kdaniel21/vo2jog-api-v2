@@ -257,7 +257,7 @@ describe('/auth endpoint', () => {
 
       em.clear()
       const updatedUserRecord = await userRepository.findOne({ email })
-      const isPasswordChanged = await bcrypt.compare(password, updatedUserRecord!.password)
+      const isPasswordChanged = await updatedUserRecord?.isPasswordCorrect(password)
 
       expect(res.status).toBe(200)
       expect(isPasswordChanged).toBeTrue()
