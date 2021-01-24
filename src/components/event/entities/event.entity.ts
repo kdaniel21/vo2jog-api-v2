@@ -1,4 +1,4 @@
-import { BaseEntity } from '@api/base/base.entity'
+import { BaseEntity } from '@components/base/base.entity'
 import { Organizer } from '@components/auth/entities/organizer.entity'
 import {
   Collection,
