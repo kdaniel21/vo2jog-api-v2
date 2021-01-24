@@ -4,6 +4,7 @@ import AuthService from '@auth/auth.service'
 import config from '@config'
 import { AppError } from '@utils/app-error'
 import dbLoader from '@loaders/database'
+import { User } from './entities/user.entity'
 
 describe.only('Auth Service', () => {
   const fakeUserCredentials = {
@@ -15,12 +16,11 @@ describe.only('Auth Service', () => {
     name: faker.name.findName(),
   }
 
-  const fakeUserEntry = {
-    ...fakeUser,
-    id: faker.random.uuid(),
-    password: bcrypt.hashSync(fakeUserCredentials.password, config.auth.saltRounds),
-    refreshTokens: { add: jest.fn() },
-  }
+  const hashedPassword = bcrypt.hashSync(
+    fakeUserCredentials.password,
+    config.auth.saltRounds,
+  )
+  const fakeUserEntry = new User(fakeUser.email, hashedPassword, fakeUser.name)
 
   // DEPENDENCIES
   const userRepository = {
