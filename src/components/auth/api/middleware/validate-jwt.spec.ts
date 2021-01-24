@@ -2,9 +2,11 @@ import { mocked } from 'ts-jest/utils'
 import faker from 'faker'
 import { validateJwt } from '@auth/api/middleware/validate-jwt'
 import jwt from 'jsonwebtoken'
+import { container } from 'tsyringe'
 jest.mock('jsonwebtoken')
+jest.mock('tsyringe')
 
-describe('Validate JWT middleware', () => {
+describe.only('Validate JWT middleware', () => {
   const mockContext: any = {
     throw: jest.fn(),
     cookies: {
@@ -13,11 +15,16 @@ describe('Validate JWT middleware', () => {
     request: {},
     state: {},
   }
+  const loggerMock = {
+    info: jest.fn(),
+  }
   const nextFunction = jest.fn()
+
+  mocked(container).resolve.mockReturnValue(loggerMock)
 
   afterEach(() => jest.resetAllMocks())
 
-  it('should validate JWT successfully', () => {
+  it.only('should validate JWT successfully', () => {
     const user = {
       id: faker.random.uuid(),
       name: faker.name.findName(),
