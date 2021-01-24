@@ -124,18 +124,15 @@ export default class AuthService {
       this.logger.info('Attempting to reset password')
 
       const hashedToken = this.hashToken(token)
-      const count = await this.userRepository.nativeUpdate(
-        {
-          passwordResetToken: hashedToken,
-          passwordResetTokenExpiresAt: { $gte: new Date() },
-        },
-        {
-          password: newPassword,
-          passwordResetToken: null,
-          passwordResetTokenExpiresAt: null,
-        },
-      )
-      if (!count) throw new Error()
+      const user = await this.userRepository.findOneOrFail({
+        passwordResetToken: hashedToken,
+        passwordResetTokenExpiresAt: { $gte: new Date() },
+      })
+
+      user.password = newPassword
+      user.passwordResetToken = undefined
+      user.passwordResetTokenExpiresAt = undefined
+      await this.userRepository.persistAndFlush(user)
     } catch {
       throw new AppError('Invalid or expired token.', 401)
     }
