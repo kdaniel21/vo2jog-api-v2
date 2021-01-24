@@ -14,7 +14,6 @@ export default ({ orm, subscribers }: { orm: MikroORM; subscribers: any }) => {
     injectedEntities.forEach(entity => {
       const token = `${entity.name}Repository`
       const repository: EntityRepository<typeof entity> = orm.em.getRepository(entity)
-      console.log(token)
 
       container.register<EntityRepository<typeof entity>>(token, { useValue: repository })
     })
