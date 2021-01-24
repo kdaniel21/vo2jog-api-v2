@@ -6,7 +6,7 @@ import { container } from 'tsyringe'
 jest.mock('jsonwebtoken')
 jest.mock('tsyringe')
 
-describe.only('Validate JWT middleware', () => {
+describe('Validate JWT middleware', () => {
   const mockContext: any = {
     throw: jest.fn(),
     cookies: {
@@ -24,7 +24,7 @@ describe.only('Validate JWT middleware', () => {
 
   afterEach(() => jest.resetAllMocks())
 
-  it.only('should validate JWT successfully', () => {
+  it('should validate JWT successfully', () => {
     const user = {
       id: faker.random.uuid(),
       name: faker.name.findName(),
